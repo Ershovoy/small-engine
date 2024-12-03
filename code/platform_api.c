@@ -1,0 +1,44 @@
+static void sleep(int32 nanoseconds)
+{
+    platform_api.sleep(nanoseconds);
+}
+
+static uint64 get_time_tick()
+{
+    return platform_api.get_time_tick();
+}
+
+static uint32 get_file_size(char16* file_name)
+{
+    return platform_api.get_file_size(file_name);
+}
+
+static bool32 read_file(char16* file_name, void* memory)
+{
+    return platform_api.read_file(file_name, memory);
+}
+
+static void* reserve_memory(uint64 size)
+{
+    return platform_api.reserve_memory(size);
+}
+
+static void* commit_memory(void* memory, uint64 size)
+{
+    return platform_api.commit_memory(memory, size);
+}
+
+static void decommit_memory(void* memory, uint64 size)
+{
+    platform_api.decommit_memory(memory, size);
+}
+
+static void release_memory(void* memory)
+{
+    platform_api.release_memory(memory);
+}
+
+static void present_offscreen(Image offscreen)
+{
+    platform_api.present_offscreen(offscreen.memory, offscreen.width, offscreen.height);
+}

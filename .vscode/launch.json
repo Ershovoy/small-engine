@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "run",
+        "type": "cppvsdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/build/windows_main_release.exe",
+        "args": [],
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}/data",
+        "environment": [],
+        "console": "newExternalWindow",
+        "preLaunchTask": "build"
+      }
+    ]
+}
