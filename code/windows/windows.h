@@ -36,8 +36,8 @@ typedef int BOOL;
 //
 //
 
-typedef void *PVOID;
-typedef void *LPVOID;
+typedef void* PVOID;
+typedef void* LPVOID;
 
 //
 // Handles
@@ -160,7 +160,7 @@ typedef ULONG_PTR SIZE_T;
 
 //
 
-typedef LRESULT (CALLBACK* WNDPROC)(HWND, UINT, WPARAM, LPARAM);
+typedef LRESULT(CALLBACK* WNDPROC)(HWND, UINT, WPARAM, LPARAM);
 
 typedef struct tagWNDCLASSEXA
 {
@@ -174,11 +174,11 @@ typedef struct tagWNDCLASSEXA
     HICON       hIcon;
     HCURSOR     hCursor;
     HBRUSH      hbrBackground;
-    const CHAR*      lpszMenuName;
-    const CHAR*      lpszClassName;
+    const CHAR* lpszMenuName;
+    const CHAR* lpszClassName;
     /* Win 4.0 */
     HICON       hIconSm;
-} WNDCLASSEXA, *PWNDCLASSEXA, *NPWNDCLASSEXA, *LPWNDCLASSEXA;
+} WNDCLASSEXA, * PWNDCLASSEXA, * NPWNDCLASSEXA, * LPWNDCLASSEXA;
 
 typedef struct tagWNDCLASSEXW
 {
@@ -192,11 +192,11 @@ typedef struct tagWNDCLASSEXW
     HICON       hIcon;
     HCURSOR     hCursor;
     HBRUSH      hbrBackground;
-    const WCHAR*     lpszMenuName;
-    const WCHAR*     lpszClassName;
+    const WCHAR* lpszMenuName;
+    const WCHAR* lpszClassName;
     /* Win 4.0 */
     HICON       hIconSm;
-} WNDCLASSEXW, *PWNDCLASSEXW, *NPWNDCLASSEXW, *LPWNDCLASSEXW;
+} WNDCLASSEXW, * PWNDCLASSEXW, * NPWNDCLASSEXW, * LPWNDCLASSEXW;
 
 typedef struct tagRECT
 {
@@ -226,7 +226,7 @@ typedef struct _SECURITY_ATTRIBUTES {
     DWORD nLength;
     void* lpSecurityDescriptor;
     BOOL bInheritHandle;
-} SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
+} SECURITY_ATTRIBUTES, * PSECURITY_ATTRIBUTES, * LPSECURITY_ATTRIBUTES;
 
 typedef struct tagMINMAXINFO {
     POINT ptReserved;
@@ -234,7 +234,7 @@ typedef struct tagMINMAXINFO {
     POINT ptMaxPosition;
     POINT ptMinTrackSize;
     POINT ptMaxTrackSize;
-} MINMAXINFO, *PMINMAXINFO, *LPMINMAXINFO;
+} MINMAXINFO, * PMINMAXINFO, * LPMINMAXINFO;
 
 typedef struct tagPAINTSTRUCT {
     HDC         hdc;
@@ -243,27 +243,27 @@ typedef struct tagPAINTSTRUCT {
     BOOL        fRestore;
     BOOL        fIncUpdate;
     BYTE        rgbReserved[32];
-} PAINTSTRUCT, *PPAINTSTRUCT, *NPPAINTSTRUCT, *LPPAINTSTRUCT;
+} PAINTSTRUCT, * PPAINTSTRUCT, * NPPAINTSTRUCT, * LPPAINTSTRUCT;
 
-typedef struct tagBITMAPINFOHEADER{
-        DWORD      biSize;
-        LONG       biWidth;
-        LONG       biHeight;
-        WORD       biPlanes;
-        WORD       biBitCount;
-        DWORD      biCompression;
-        DWORD      biSizeImage;
-        LONG       biXPelsPerMeter;
-        LONG       biYPelsPerMeter;
-        DWORD      biClrUsed;
-        DWORD      biClrImportant;
+typedef struct tagBITMAPINFOHEADER {
+    DWORD      biSize;
+    LONG       biWidth;
+    LONG       biHeight;
+    WORD       biPlanes;
+    WORD       biBitCount;
+    DWORD      biCompression;
+    DWORD      biSizeImage;
+    LONG       biXPelsPerMeter;
+    LONG       biYPelsPerMeter;
+    DWORD      biClrUsed;
+    DWORD      biClrImportant;
 } BITMAPINFOHEADER;
 
 typedef struct tagRGBQUAD {
-        BYTE    rgbBlue;
-        BYTE    rgbGreen;
-        BYTE    rgbRed;
-        BYTE    rgbReserved;
+    BYTE    rgbBlue;
+    BYTE    rgbGreen;
+    BYTE    rgbRed;
+    BYTE    rgbReserved;
 } RGBQUAD;
 
 typedef struct tagBITMAPINFO {
@@ -283,7 +283,7 @@ typedef struct _OVERLAPPED {
     } DUMMYUNIONNAME;
 
     HANDLE  hEvent;
-} OVERLAPPED, *LPOVERLAPPED;
+} OVERLAPPED, * LPOVERLAPPED;
 
 typedef union _LARGE_INTEGER {
     struct {
@@ -299,12 +299,15 @@ typedef union _LARGE_INTEGER {
 
 typedef void (WINAPI* LPOVERLAPPED_COMPLETION_ROUTINE)(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped);
 
-typedef DWORD (WINAPI *PTHREAD_START_ROUTINE)(void* lpThreadParameter);
+typedef DWORD(WINAPI* PTHREAD_START_ROUTINE)(void* lpThreadParameter);
 typedef PTHREAD_START_ROUTINE LPTHREAD_START_ROUTINE;
 
 //
 // Mouse input
 //
+
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 
 #define WM_MOUSEFIRST                   0x0200
 #define WM_MOUSEMOVE                    0x0200
@@ -373,9 +376,9 @@ __declspec(dllimport) ATOM WINAPI RegisterClassExW(const WNDCLASSEXW*);
 __declspec(dllimport) BOOL WINAPI AdjustWindowRectEx(RECT* lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle);
 
 __declspec(dllimport) HWND WINAPI CreateWindowExA(DWORD dwExStyle, const CHAR* lpClassName, const CHAR* lpWindowName, DWORD dwStyle,
-                                                  int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, void* lpParam);
+    int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, void* lpParam);
 __declspec(dllimport) HWND WINAPI CreateWindowExW(DWORD dwExStyle, const WCHAR* lpClassName, const WCHAR* lpWindowName, DWORD dwStyle,
-                                                  int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, void* lpParam);
+    int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, void* lpParam);
 
 __declspec(dllimport) LRESULT WINAPI DefWindowProcA(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 __declspec(dllimport) LRESULT WINAPI DefWindowProcW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
@@ -415,7 +418,7 @@ __declspec(dllimport) BOOL WINAPI DestroyWindow(HWND hWnd);
 __declspec(dllimport) BOOL WINAPI GetClientRect(HWND hWnd, RECT* lpRect);
 __declspec(dllimport) HDC WINAPI BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
 
-__declspec(dllimport) BOOL WINAPI EndPaint(HWND hWnd, const PAINTSTRUCT *lpPaint);
+__declspec(dllimport) BOOL WINAPI EndPaint(HWND hWnd, const PAINTSTRUCT* lpPaint);
 
 __declspec(dllimport) BOOL WINAPI InvalidateRect(HWND hWnd, const RECT* lpRect, BOOL bErase);
 __declspec(dllimport) BOOL WINAPI UpdateWindow(HWND hWnd);

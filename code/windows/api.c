@@ -107,6 +107,9 @@ static uint32 color_index[COLOR_COUNT] =
     [YELLOW] = 0xFFFFFF00,
     [CYAN] = 0xFF00FFFF,
     [MAGENTA] = 0xFFFF00FF,
+    [MID_GREEN] = 0xFF47A44D,
+    [GREY] = 0xFF95928F,
+    [MERINO] = 0xFFF1F1EA,
 };
 
 static void present_offscreen_implementation(void* memory, int32 width, int32 height)

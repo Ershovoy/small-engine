@@ -121,7 +121,15 @@ typedef struct
 
 typedef struct
 {
+    float32 x;
+    float32 y;
+} Mouse_state;
+
+
+typedef struct
+{
     Button_state buttons[BUTTONS_COUNT];
+    Mouse_state mouse;
 } Input;
 
 static Input input = { 0 };

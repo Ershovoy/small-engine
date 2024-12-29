@@ -3,6 +3,7 @@
 #include "input.c"
 #include "renderer.c"
 #include "platform_api.c"
+#include "arena.c"
 
 static bool32 initialize_game()
 {
@@ -22,8 +23,13 @@ static void render_game()
     draw_circle(offscreen, RED, 32, 32, 8);
     draw_circle(offscreen, RED, 1000, 1000, 32);
     draw_circle(offscreen, RED, 0, 1000, 32);
-    //draw_circle(offscreen, RED, 256 / 2, 256 / 2, 128);
     draw_circle(offscreen, RED, 64 / 2, 64 / 2, 32);
+    for(int32 i = 0; i < 32; i += 1)
+    {
+        draw_rectangle(offscreen, MID_GREEN, 8 * (i - 1), 8 * (i - 1), 8 * i, 8 * i);
+    }
+
+    //draw_circle(offscreen, RED, 256 / 2, 256 / 2, 128);
     present_offscreen(offscreen);
 }
 

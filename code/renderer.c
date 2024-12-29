@@ -22,9 +22,20 @@ static void draw_pixel(Image image, Color color, int32 x, int32 y)
     }
 }
 
-static void draw_rectangle(Image image, Color color, int32 bottom, int32 left, int32 right, int32 top)
+static void draw_image(Image destination, Image source, int32 left, int32 bottom)
 {
 
+}
+
+static void draw_rectangle(Image image, Color color, int32 left, int32 bottom, int32 right, int32 top)
+{
+    for (int32 y = bottom; y < top; y += 1)
+    {
+        for (int32 x = left; x < right; x += 1)
+        {
+            draw_pixel(image, color, x, y);
+        }
+    }
 }
 
 static void draw_line(Image image,  Color color, int32 x1, int32 y1, int32 x2, int32 y2)

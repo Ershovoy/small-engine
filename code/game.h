@@ -1,9 +1,11 @@
 #include "types.h"
-#include "defines.h"
+#include "macros.h"
 #include "math.h"
 #include "input.h"
 #include "renderer.h"
 #include "platform_api.h"
+#include "arena.h"
+#include "string.h"
 
 static uint64 start_time = 0;
 static uint64 time_per_update = (uint64)1'000'000'000 / 60;

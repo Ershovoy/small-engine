@@ -1,6 +1,7 @@
 {
     "telemetry.telemetryLevel": "off",
     "editor.fontFamily": "Cascadia Mono",
+    //"editor.fontFamily": "comic mono font",
     "editor.guides.indentation": false,
     "editor.minimap.showSlider": "always",
     "editor.minimap.size": "fit",

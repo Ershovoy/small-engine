@@ -17,6 +17,12 @@ static void process_button(Button button, bool32 is_down)
     }
 }
 
+static void process_mouse(int32 x, int32 y, int32 width, int32 height)
+{
+    input.mouse.x = (float32)(x * DEFAULT_RESOLUTION) / width;
+    input.mouse.y = (float32)(y * DEFAULT_RESOLUTION) / height;
+}
+
 static bool32 is_button_pressed(Button button)
 {
     return input.buttons[button].is_pressed;

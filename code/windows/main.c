@@ -1,7 +1,8 @@
 #include "../game.c"
 
 #include "windows.h"
-//#include <Windows.h>
+// #include <Windows.h>
+// #include <Windowsx.h>
 int32 _fltused;
 
 #include "main.h"
@@ -32,7 +33,7 @@ LRESULT CALLBACK window_procedure(HWND   window,
             RECT client_rectangle;
             GetClientRect(window, &client_rectangle);
 
-            int32 client_width  = client_rectangle.right - client_rectangle.left;
+            int32 client_width = client_rectangle.right - client_rectangle.left;
             int32 client_height = client_rectangle.bottom - client_rectangle.top;
 
             window_width = client_width;
@@ -103,9 +104,9 @@ HWND initialize_window(HINSTANCE instance, int32 width, int32 height)
     LONG required_window_height = window_rectangle.bottom - window_rectangle.top;
 
     HWND window = CreateWindowExW(window_extended_style, window_class.lpszClassName,
-                                   window_class.lpszClassName, window_style,
-                                   CW_USEDEFAULT, CW_USEDEFAULT, required_window_width,
-                                   required_window_height, 0, 0, instance, 0);
+                                  window_class.lpszClassName, window_style,
+                                  CW_USEDEFAULT, CW_USEDEFAULT, required_window_width,
+                                  required_window_height, 0, 0, instance, 0);
 
     return window;
 }
@@ -157,6 +158,15 @@ void process_window_messages()
                     process_button(BUTTON_WHEEL_DOWN, 1);
                     process_button(BUTTON_WHEEL_DOWN, 0);
                 }
+
+                break;
+            }
+            case WM_MOUSEMOVE:
+            {
+                int32 position_x = GET_X_LPARAM(message.lParam);
+                int32 position_y = window_height - GET_Y_LPARAM(message.lParam);
+
+                process_mouse(position_x, position_y, window_width, window_height);
 
                 break;
             }

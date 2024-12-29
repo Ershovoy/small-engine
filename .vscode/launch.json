@@ -5,7 +5,7 @@
         "name": "run",
         "type": "cppvsdbg",
         "request": "launch",
-        "program": "${workspaceFolder}/build/windows_main_release.exe",
+        "program": "${workspaceFolder}/build/main.exe",
         "args": [],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}/data",
