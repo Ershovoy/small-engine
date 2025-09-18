@@ -38,7 +38,7 @@ static void release_memory(void* memory)
     platform_api.release_memory(memory);
 }
 
-static void present_offscreen(Image offscreen)
+static void present_offscreen(Image_view offscreen_view)
 {
-    platform_api.present_offscreen(offscreen.memory, offscreen.width, offscreen.height);
+    platform_api.present_offscreen(offscreen_view.image->memory, offscreen_view.width, offscreen_view.height);
 }

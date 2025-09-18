@@ -1,30 +1,39 @@
-typedef enum
-{
-    TRANSPARENT,
-    BLACK,
-    WHITE,
-    RED,
-    GREEN,
-    BLUE,
-    YELLOW,
-    CYAN,
-    MAGENTA,
+#define MAX_GAME_HORIZONTAL_RESOLUTION 3840
+#define MAX_GAME_VERTICAL_RESOLUTION 2160
+#define GAME_HORIZONTAL_RESOLUTION 160
+#define GAME_VERTICAL_RESOLUTION   120
 
-    MID_GREEN,
-    GREY,
-    MERINO,
-    COLOR_COUNT = 0xFF
+typedef struct
+{
+    uint8 red;
+    uint8 green;
+    uint8 blue;
+    uint8 alpha;
 } Color;
 
 typedef struct
 {
     int32 width;
     int32 height;
-    byte* memory;
+    uint32* memory;
 } Image;
 
-#define MAX_RESOLUTION 256
-#define DEFAULT_RESOLUTION 64+32
+typedef struct
+{
+    Image* image;
+    int32 base_width;
+    int32 base_height;
+    int32 width;
+    int32 height;
+    int32 scale;
+    int32 target_width;
+    int32 target_height;
+    int32 translate_x;
+    int32 translate_y;
+    int32 horizontal_padding;
+    int32 vertical_padding;
+} Image_view;
 
+static uint32 offscreen_buffer[MAX_GAME_HORIZONTAL_RESOLUTION * MAX_GAME_VERTICAL_RESOLUTION] = { 0 };
 static Image offscreen = { 0 };
-static byte buffer[MAX_RESOLUTION * MAX_RESOLUTION] = { 0 };
+static Image_view offscreen_view = { 0 };

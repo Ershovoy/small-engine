@@ -1,7 +1,7 @@
 #include "../game.c"
 
 #include "windows.h"
-// #include <Windows.h>
+//#include <Windows.h>
 // #include <Windowsx.h>
 int32 _fltused;
 
@@ -33,19 +33,24 @@ LRESULT CALLBACK window_procedure(HWND   window,
             RECT client_rectangle;
             GetClientRect(window, &client_rectangle);
 
-            int32 client_width = client_rectangle.right - client_rectangle.left;
-            int32 client_height = client_rectangle.bottom - client_rectangle.top;
-
-            window_width = client_width;
-            window_height = client_height;
+            client_width = client_rectangle.right - client_rectangle.left;
+            client_height = client_rectangle.bottom - client_rectangle.top;
 
             break;
         }
         case WM_GETMINMAXINFO:
         {
+            RECT client_rectangle = { 0 };
+            client_rectangle.right = GAME_HORIZONTAL_RESOLUTION;
+            client_rectangle.bottom = GAME_VERTICAL_RESOLUTION;
+            RECT window_rectangle = client_rectangle;
+            AdjustWindowRectEx(&window_rectangle, window_style, 0, window_extended_style);
+            LONG minimal_window_width = window_rectangle.right - window_rectangle.left;
+            LONG minimal_window_height = window_rectangle.bottom - window_rectangle.top;
+
             MINMAXINFO* min_max_info = (MINMAXINFO*)lParam;
-            min_max_info->ptMinTrackSize.x = 320 / 2;
-            min_max_info->ptMinTrackSize.y = 240 / 2;
+            min_max_info->ptMinTrackSize.x = minimal_window_width;
+            min_max_info->ptMinTrackSize.y = minimal_window_height;
 
             break;
         }
@@ -54,8 +59,15 @@ LRESULT CALLBACK window_procedure(HWND   window,
             PAINTSTRUCT paint_struct;
             HDC device_context = BeginPaint(window, &paint_struct);
 
-            StretchBlt(device_context, 0, 0, window_width, window_height,
-                       memory_device_context, 0, offscreen.height - 1, offscreen.width, -offscreen.height, SRCCOPY);
+            int32 present_width = offscreen_view.width * offscreen_view.scale;
+            int32 present_height = offscreen_view.height * offscreen_view.scale;
+            int32 present_min_x = (client_width - present_width) / 2;
+            int32 present_max_x = (client_width + present_width) / 2;
+            int32 present_min_y = (client_height - present_height) / 2;
+            int32 present_max_y = (client_height + present_height) / 2;
+
+            StretchBlt(device_context, offscreen_view.horizontal_padding, offscreen_view.vertical_padding, client_width - offscreen_view.horizontal_padding * 2, client_height - offscreen_view.vertical_padding * 2,
+                       memory_device_context, 0, offscreen_view.height - 1, offscreen_view.width, -offscreen_view.height, SRCCOPY);
 
             EndPaint(window, &paint_struct);
 
@@ -78,7 +90,7 @@ LRESULT CALLBACK window_procedure(HWND   window,
     return result;
 }
 
-HWND initialize_window(HINSTANCE instance, int32 width, int32 height)
+HWND initialize_window(HINSTANCE instance, int32 client_width, int32 client_height)
 {
     WNDCLASSEXW window_class = { 0 };
     window_class.cbSize = sizeof(WNDCLASSEXW);
@@ -87,17 +99,14 @@ HWND initialize_window(HINSTANCE instance, int32 width, int32 height)
     window_class.hInstance = instance;
     window_class.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(32512));
     window_class.hIcon = LoadIconW(0, MAKEINTRESOURCEW(32513));
-    window_class.hbrBackground = GetStockObject(HOLLOW_BRUSH);
+    window_class.hbrBackground = GetStockObject(BLACK_PEN);
     window_class.lpszClassName = L"Redungeon Classic";
 
     RegisterClassExW(&window_class);
 
-    DWORD window_extended_style = 0;
-    DWORD window_style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
-
     RECT client_rectangle = { 0 };
-    client_rectangle.right = width;
-    client_rectangle.bottom = height;
+    client_rectangle.right = client_width;
+    client_rectangle.bottom = client_height;
     RECT window_rectangle = client_rectangle;
     AdjustWindowRectEx(&window_rectangle, window_style, 0, window_extended_style);
     LONG required_window_width = window_rectangle.right - window_rectangle.left;
@@ -152,21 +161,37 @@ void process_window_messages()
                 {
                     process_button(BUTTON_WHEEL_UP, 1);
                     process_button(BUTTON_WHEEL_UP, 0);
+
+                    // Retrieve screen dimensions
+                    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+                    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+                    // Set window style to WS_POPUP to remove borders and title bar
+                    SetWindowLongPtrA(window, GWL_STYLE, WS_VISIBLE | WS_POPUP);
+
+                    // Position the window to cover the entire screen
+                    SetWindowPos(window, HWND_TOP, 0, 0, screenWidth, screenHeight, SWP_FRAMECHANGED);
+
                 }
                 else
                 {
                     process_button(BUTTON_WHEEL_DOWN, 1);
                     process_button(BUTTON_WHEEL_DOWN, 0);
+
+                    SetWindowLongPtrA(window, GWL_STYLE, window_style | WS_POPUP);
+                    SetWindowPos(window, HWND_TOP, 0, 0, 640, 480, SWP_FRAMECHANGED);
                 }
+
+
 
                 break;
             }
             case WM_MOUSEMOVE:
             {
                 int32 position_x = GET_X_LPARAM(message.lParam);
-                int32 position_y = window_height - GET_Y_LPARAM(message.lParam);
+                int32 position_y = client_height - GET_Y_LPARAM(message.lParam);
 
-                process_mouse(position_x, position_y, window_width, window_height);
+                process_mouse(position_x, position_y, client_width, client_height);
 
                 break;
             }
@@ -194,8 +219,8 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
 
     BITMAPINFOHEADER bitmap_info = { 0 };
     bitmap_info.biSize = sizeof(BITMAPINFOHEADER);
-    bitmap_info.biWidth = MAX_RESOLUTION;
-    bitmap_info.biHeight = -MAX_RESOLUTION;
+    bitmap_info.biWidth = MAX_GAME_HORIZONTAL_RESOLUTION;
+    bitmap_info.biHeight = -MAX_GAME_VERTICAL_RESOLUTION;
     bitmap_info.biPlanes = 1;
     bitmap_info.biBitCount = 32;
     bitmap_info.biCompression = BI_RGB;
@@ -206,6 +231,8 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
     is_running = initialize_game();
     while (is_running)
     {
+        change_target_resolution(client_width, client_height);
+
         process_window_messages();
 
         game_loop();
@@ -224,7 +251,7 @@ void __stdcall wWinMainCRTStartup()
     if (!instance)
         ExitProcess(1);
 
-    window = initialize_window(instance, window_width, window_height);
+    window = initialize_window(instance, client_width, client_height);
     if (!window)
         ExitProcess(1);
 

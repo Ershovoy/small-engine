@@ -1,3 +1,21 @@
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+#define max(a, b) (((a) < (b)) ? (b) : (a))
+#define square(a) ((a) * (a))
+
+int32 round_float32_to_int32(float32 number)
+{
+    if (number > 0.0f)
+    {
+        number += 0.5f;
+    }
+    else
+    {
+        number -= 0.5f;
+    }
+
+    return (int32)number;
+}
+
 // https://c-for-dummies.com/blog/?p=4250
 static float32 square_root(float32 x)
 {

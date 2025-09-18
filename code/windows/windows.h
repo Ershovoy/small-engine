@@ -123,6 +123,8 @@ typedef ULONG_PTR SIZE_T;
 
 //
 
+#define WM_USER                         0x0400
+
 #define WM_PAINT                        0x000F
 #define WM_CLOSE                        0x0010
 #define WM_DESTROY                      0x0002
@@ -361,6 +363,9 @@ __declspec(dllimport) BOOL __stdcall ReadFileEx(HANDLE hFile, void* lpBuffer, DW
 
 //
 
+#define DECLSPEC_IMPORT __declspec(dllimport)
+#define WINUSERAPI DECLSPEC_IMPORT
+
 __declspec(dllimport) HMODULE __stdcall GetModuleHandleA(const CHAR* module_name);
 __declspec(dllimport) HMODULE __stdcall GetModuleHandleW(const WCHAR* module_name);
 
@@ -418,6 +423,64 @@ __declspec(dllimport) BOOL WINAPI DestroyWindow(HWND hWnd);
 __declspec(dllimport) BOOL WINAPI GetClientRect(HWND hWnd, RECT* lpRect);
 __declspec(dllimport) HDC WINAPI BeginPaint(HWND hWnd, LPPAINTSTRUCT lpPaint);
 
+/*
+ * GetSystemMetrics() codes
+ */
+
+#define SM_CXSCREEN             0
+#define SM_CYSCREEN             1
+
+WINUSERAPI int WINAPI GetSystemMetrics(_In_ int nIndex);
+
+WINUSERAPI LONG_PTR WINAPI SetWindowLongPtrA(_In_ HWND hWnd, _In_ int nIndex, _In_ LONG_PTR dwNewLong);
+
+
+#define HWND_TOP        ((HWND)0)
+#define HWND_BOTTOM     ((HWND)1)
+#define HWND_TOPMOST    ((HWND)-1)
+#define HWND_NOTOPMOST  ((HWND)-2)
+
+/*
+ * Window field offsets for GetWindowLong()
+ */
+#define GWL_WNDPROC         (-4)
+#define GWL_HINSTANCE       (-6)
+#define GWL_HWNDPARENT      (-8)
+#define GWL_STYLE           (-16)
+#define GWL_EXSTYLE         (-20)
+#define GWL_USERDATA        (-21)
+#define GWL_ID              (-12)
+
+/*
+ * SetWindowPos Flags
+ */
+#define SWP_NOSIZE          0x0001
+#define SWP_NOMOVE          0x0002
+#define SWP_NOZORDER        0x0004
+#define SWP_NOREDRAW        0x0008
+#define SWP_NOACTIVATE      0x0010
+#define SWP_FRAMECHANGED    0x0020  /* The frame changed: send WM_NCCALCSIZE */
+#define SWP_SHOWWINDOW      0x0040
+#define SWP_HIDEWINDOW      0x0080
+#define SWP_NOCOPYBITS      0x0100
+#define SWP_NOOWNERZORDER   0x0200  /* Don't do owner Z ordering */
+#define SWP_NOSENDCHANGING  0x0400  /* Don't send WM_WINDOWPOSCHANGING */
+
+WINUSERAPI
+BOOL
+WINAPI
+SetWindowPos(
+    _In_ HWND hWnd,
+    _In_opt_ HWND hWndInsertAfter,
+    _In_ int X,
+    _In_ int Y,
+    _In_ int cx,
+    _In_ int cy,
+    _In_ UINT uFlags);
+
+// WINUSERAPI
+__declspec(dllimport) int WINAPI FillRect(_In_ HDC hDC, _In_ CONST RECT *lprc, _In_ HBRUSH hbr);
+
 __declspec(dllimport) BOOL WINAPI EndPaint(HWND hWnd, const PAINTSTRUCT* lpPaint);
 
 __declspec(dllimport) BOOL WINAPI InvalidateRect(HWND hWnd, const RECT* lpRect, BOOL bErase);
@@ -432,8 +495,26 @@ WINBASEAPI VOID WINAPI Sleep(_In_ DWORD dwMilliseconds);
 
 #define WINGDIAPI DECLSPEC_IMPORT
 
+/* Stock Logical Objects */
+#define WHITE_BRUSH         0
+#define LTGRAY_BRUSH        1
+#define GRAY_BRUSH          2
+#define DKGRAY_BRUSH        3
+#define BLACK_BRUSH         4
 #define NULL_BRUSH          5
 #define HOLLOW_BRUSH        NULL_BRUSH
+#define WHITE_PEN           6
+#define BLACK_PEN           7
+#define NULL_PEN            8
+#define OEM_FIXED_FONT      10
+#define ANSI_FIXED_FONT     11
+#define ANSI_VAR_FONT       12
+#define SYSTEM_FONT         13
+#define DEVICE_DEFAULT_FONT 14
+#define DEFAULT_PALETTE     15
+#define SYSTEM_FIXED_FONT   16
+
+
 #define BI_RGB        0L
 #define DIB_RGB_COLORS      0
 #define SRCCOPY             (DWORD)0x00CC0020

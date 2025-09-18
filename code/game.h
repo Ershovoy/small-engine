@@ -16,6 +16,8 @@ static uint64 current_time = 0;
 typedef struct
 {
     uint64 tick;
+    float32 x;
+    float32 y;
 } Game;
 
 static Game game = { 0 };

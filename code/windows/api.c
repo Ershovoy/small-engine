@@ -96,40 +96,29 @@ static uint64 get_time_tick_implementation()
     return (quotient * 1'000'000'000) + (remainder * 1'000'000'000) / perfomance_counter_frequency;
 }
 
-static uint32 color_index[COLOR_COUNT] =
-{
-    [TRANSPARENT] = 0x00000000,
-    [BLACK] = 0xFF000000,
-    [WHITE] = 0xFFFFFFFF,
-    [RED] = 0xFFFF0000,
-    [GREEN] = 0xFF00FF00,
-    [BLUE] = 0xFF0000FF,
-    [YELLOW] = 0xFFFFFF00,
-    [CYAN] = 0xFF00FFFF,
-    [MAGENTA] = 0xFFFF00FF,
-    [MID_GREEN] = 0xFF47A44D,
-    [GREY] = 0xFF95928F,
-    [MERINO] = 0xFFF1F1EA,
-};
-
 static void present_offscreen_implementation(void* memory, int32 width, int32 height)
 {
-    uint8* source_row = (uint8*)memory;
+    uint32* source_row = (uint32*)memory;
     uint32* destination_row = (uint32*)device_bitmap_memory;
     for (int32 y = 0; y < height; y += 1)
     {
-        uint8* source_pixel = source_row;
+        uint32* source_pixel = source_row;
         uint32* destination_pixel = (uint32*)destination_row;
         for (int32 x = 0; x < width; x += 1)
         {
-            *destination_pixel = color_index[*source_pixel];
+            uint8 red = (uint8)(*source_pixel >> 0);
+            uint8 green = (uint8)(*source_pixel >> 8);
+            uint8 blue = (uint8)(*source_pixel >> 16);
+            uint8 alpha = (uint8)(*source_pixel >> 24);
+
+            *destination_pixel = (alpha << 24) | (red << 16) | (green << 8) | blue;
 
             source_pixel += 1;
             destination_pixel += 1;
         }
 
         source_row += width;
-        destination_row += MAX_RESOLUTION;
+        destination_row += MAX_GAME_HORIZONTAL_RESOLUTION;
     }
 
     InvalidateRect(window, 0, 0);
