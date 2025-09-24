@@ -7,14 +7,14 @@
 #include "arena.h"
 #include "string.h"
 
-static uint64 start_time = 0;
-static uint64 time_per_update = (uint64)1'000'000'000 / 60;
-static uint64 accumulator = 0;
-static uint64 previous_time = 0;
-static uint64 current_time = 0;
-
 typedef struct
 {
+    uint64 start_time;
+    uint64 time_per_update;
+    uint64 accumulator;
+    uint64 previous_time;
+    uint64 current_time;
+
     uint64 tick;
     float32 x;
     float32 y;

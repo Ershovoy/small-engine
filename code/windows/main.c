@@ -1,17 +1,35 @@
+#ifdef INTERNAL
 #include "../game.c"
+#endif
 
+#if NO_C_EXTENTION
 #include "windows.h"
-//#include <Windows.h>
-// #include <Windowsx.h>
+#else
+#undef max
+#undef min
+#define VC_EXTRALEAN
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <windowsx.h>
+__declspec(dllimport) LONG NTAPI NtDelayExecution(BOOLEAN Alertable, LARGE_INTEGER* DelayInterval);
+#endif
+
+#ifndef INTERNAL
+#include "debug.h"
+#include "debug.c"
+#endif
+
+#ifdef NO_C_RUNTIME
 int32 _fltused;
+#endif
 
 #include "main.h"
 #include "api.c"
 
 LRESULT CALLBACK window_procedure(HWND   window,
-                                  UINT   message,
-                                  WPARAM wParam,
-                                  LPARAM lParam)
+    UINT   message,
+    WPARAM wParam,
+    LPARAM lParam)
 {
     LRESULT result = { 0 };
     switch (message)
@@ -59,15 +77,25 @@ LRESULT CALLBACK window_procedure(HWND   window,
             PAINTSTRUCT paint_struct;
             HDC device_context = BeginPaint(window, &paint_struct);
 
-            int32 present_width = offscreen_view.width * offscreen_view.scale;
-            int32 present_height = offscreen_view.height * offscreen_view.scale;
-            int32 present_min_x = (client_width - present_width) / 2;
-            int32 present_max_x = (client_width + present_width) / 2;
-            int32 present_min_y = (client_height - present_height) / 2;
-            int32 present_max_y = (client_height + present_height) / 2;
+            // int32 present_width = offscreen_view.width * offscreen_view.scale;
+            // int32 present_height = offscreen_view.height * offscreen_view.scale;
+            // int32 present_min_x = (client_width - present_width) / 2;
+            // int32 present_max_x = (client_width + present_width) / 2;
+            // int32 present_min_y = (client_height - present_height) / 2;
+            // int32 present_max_y = (client_height + present_height) / 2;
 
-            StretchBlt(device_context, offscreen_view.horizontal_padding, offscreen_view.vertical_padding, client_width - offscreen_view.horizontal_padding * 2, client_height - offscreen_view.vertical_padding * 2,
-                       memory_device_context, 0, offscreen_view.height - 1, offscreen_view.width, -offscreen_view.height, SRCCOPY);
+            int32 present_width = GAME_HORIZONTAL_RESOLUTION;
+            int32 present_height = GAME_VERTICAL_RESOLUTION;
+            int32 present_min_x = 0;
+            int32 present_max_x = client_width;
+            int32 present_min_y = 0;
+            int32 present_max_y = client_height;
+
+            // StretchBlt(device_context, offscreen_view.horizontal_padding, offscreen_view.vertical_padding, client_width - offscreen_view.horizontal_padding * 2, client_height - offscreen_view.vertical_padding * 2,
+            //            memory_device_context, 0, offscreen_view.height - 1, offscreen_view.width, -offscreen_view.height, SRCCOPY);
+
+            StretchBlt(device_context, 0, 0, client_width, client_height,
+                       memory_device_context, 0, GAME_VERTICAL_RESOLUTION - 1, GAME_HORIZONTAL_RESOLUTION, -GAME_VERTICAL_RESOLUTION, SRCCOPY);
 
             EndPaint(window, &paint_struct);
 
@@ -191,7 +219,7 @@ void process_window_messages()
                 int32 position_x = GET_X_LPARAM(message.lParam);
                 int32 position_y = client_height - GET_Y_LPARAM(message.lParam);
 
-                process_mouse(position_x, position_y, client_width, client_height);
+                //process_mouse(position_x, position_y, client_width, client_height);
 
                 break;
             }
@@ -228,15 +256,27 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
     HBITMAP device_bitmap = CreateDIBSection(0, (BITMAPINFO*)&bitmap_info, DIB_RGB_COLORS, (void**)&device_bitmap_memory, 0, 0);
     HGDIOBJ previous_object = SelectObject(memory_device_context, device_bitmap);
 
+#ifndef INTERNAL
+    initialize_debug();
+#endif
+
     is_running = initialize_game();
     while (is_running)
     {
-        change_target_resolution(client_width, client_height);
+#ifndef INTERNAL
+        update_debug();
+#endif
+
+        //change_target_resolution(client_width, client_height);
 
         process_window_messages();
 
         game_loop();
     }
+
+#ifndef INTERNAL
+    deinitialize_debug();
+#endif
 
     SelectObject(memory_device_context, previous_object);
     DeleteObject(device_bitmap);
@@ -245,7 +285,11 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
     ExitThread(0);
 }
 
+#ifdef NO_C_RUNTIME
 void __stdcall wWinMainCRTStartup()
+#else
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+#endif
 {
     instance = GetModuleHandleW(0);
     if (!instance)

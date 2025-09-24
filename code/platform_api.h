@@ -16,7 +16,6 @@ typedef struct
 {
     sleep_function* sleep;
 
-    // TOOD: Need to be changed. But how? Maybe get_ticks? Maybe get_time_tick? Maybe get_time_stamp?
     get_time_tick_function* get_time_tick;
 
     get_file_size_function* get_file_size;

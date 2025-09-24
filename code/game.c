@@ -15,7 +15,8 @@ static bool32 initialize_game()
     offscreen_view.width = GAME_HORIZONTAL_RESOLUTION;
     offscreen_view.height = GAME_VERTICAL_RESOLUTION;
 
-    start_time = get_time_tick();
+    game.time_per_update = (uint64)1'000'000'000 / 60;
+    game.start_time = get_time_tick();
 
     return 1;
 }
@@ -118,21 +119,21 @@ static void update_game()
 
 static void game_loop()
 {
-    current_time = get_time_tick() - start_time;
-    uint64 delta_time = current_time - previous_time;
-    previous_time = current_time;
-    accumulator += delta_time;
-    while (accumulator >= time_per_update)
+    game.current_time = get_time_tick() - game.start_time;
+    uint64 delta_time = game.current_time - game.previous_time;
+    game.previous_time = game.current_time;
+    game.accumulator += delta_time;
+    while (game.accumulator >= game.time_per_update)
     {
-        if (accumulator > 1'000'000'000)
+        if (game.accumulator > 1'000'000'000)
         {
-            accumulator = time_per_update;
+            game.accumulator = game.time_per_update;
         }
 
         update_game();
 
-        accumulator -= time_per_update;
-        if (accumulator < time_per_update)
+        game.accumulator -= game.time_per_update;
+        if (game.accumulator < game.time_per_update)
         {
             render_game();
         }

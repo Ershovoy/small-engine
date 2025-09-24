@@ -285,7 +285,7 @@ typedef struct _OVERLAPPED {
     } DUMMYUNIONNAME;
 
     HANDLE  hEvent;
-} OVERLAPPED, * LPOVERLAPPED;
+} OVERLAPPED, *LPOVERLAPPED;
 
 typedef union _LARGE_INTEGER {
     struct {
