@@ -9,6 +9,6 @@ typedef struct
 {
     byte* memory;
     int64 capacity;
-    int64 commited;
+    int64 committed;
     int64 offset;
 } Arena;

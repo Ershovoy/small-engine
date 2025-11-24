@@ -7,16 +7,24 @@
 
 static bool32 initialize_game()
 {
-    offscreen.width = MAX_GAME_HORIZONTAL_RESOLUTION;
-    offscreen.height = MAX_GAME_VERTICAL_RESOLUTION;
-    offscreen.memory = offscreen_buffer;
+    Arena arena = { 0 };
+    arena_initialize(&arena, GIGABYTES(1));
+    game = arena_allocate(&arena, sizeof(Game));
 
-    offscreen_view.image = &offscreen;
-    offscreen_view.width = GAME_HORIZONTAL_RESOLUTION;
-    offscreen_view.height = GAME_VERTICAL_RESOLUTION;
+    Image* image = arena_allocate(&arena, sizeof(Image));
+    image->memory = arena_allocate(&arena, MAX_GAME_HORIZONTAL_RESOLUTION * MAX_GAME_VERTICAL_RESOLUTION);
+    image->width = MAX_GAME_HORIZONTAL_RESOLUTION;
+    image->height = MAX_GAME_VERTICAL_RESOLUTION;
 
-    game.time_per_update = (uint64)1'000'000'000 / 60;
-    game.start_time = get_time_tick();
+    Image_view image_view = { 0 };
+    image_view.image = image;
+    image_view.width = GAME_HORIZONTAL_RESOLUTION;
+    image_view.height = GAME_VERTICAL_RESOLUTION;
+
+    game->offscreen = image_view;
+
+    game->time_per_update = (uint64)1'000'000'000 / 60;
+    game->start_time = get_time_tick();
 
     return 1;
 }
@@ -24,21 +32,21 @@ static bool32 initialize_game()
 static void render_game()
 {
     Color clear_color = { 0 };
-    clear_color.blue = (uint8)(game.tick % 256);
-    clear_color.red = (uint8)(game.tick / 2 % 256);
-    clear_color.green = (uint8)(game.tick / 4 % 256);
-    clear(clear_color);
+    clear_color.blue = (uint8)(game->tick % 256);
+    clear_color.red = (uint8)(game->tick / 2 % 256);
+    clear_color.green = (uint8)(game->tick / 4 % 256);
+    clear(game->offscreen, clear_color);
 
     Vec2 position;
-    position.e1 = game.x;
-    position.e2 = game.y;
+    position.e1 = game->x;
+    position.e2 = game->y;
 
     draw_circle(255, 0, 255,position.e1, position.e2, 10);
 
     draw_horizontal_line(255, 255, 255, 0);
-    draw_horizontal_line(255, 255, 255, (float32)offscreen_view.height);
-    draw_vertical_line(255, 255, 255, 0);
-    draw_vertical_line(255, 255, 255, (float32)offscreen_view.width);
+    draw_horizontal_line(255, 255, 255, (float32)game->offscreen.height);
+    //draw_vertical_line(255, 255, 255, 0);
+    draw_vertical_line(255, 255, 255, (float32)game->offscreen.width);
 
     // draw_circle(offscreen, RED, 32, 32, 8);
     // draw_circle(offscreen, RED, 1000, 1000, 32);
@@ -50,7 +58,7 @@ static void render_game()
     // }
 
     // //draw_circle(offscreen, RED, 256 / 2, 256 / 2, 128);
-    present_offscreen(offscreen_view);
+    present_offscreen(game->offscreen);
 }
 
 static void update_game()
@@ -79,19 +87,19 @@ static void update_game()
     }
     if (is_button_down(KEY_W))
     {
-        game.y += 0.13f;
+        game->y += 1.13f;
     }
     if (is_button_down(KEY_S))
     {
-        game.y -= 0.13f;
+        game->y -= 1.13f;
     }
     if (is_button_down(KEY_D))
     {
-        game.x += 0.13f;
+        game->x += 1.13f;
     }
     if (is_button_down(KEY_A))
     {
-        game.x -= 0.13f;
+        game->x -= 1.13f;
     }
 
     if (is_button_down(KEY_UP))
@@ -112,28 +120,28 @@ static void update_game()
     }
 
 
-    game.tick += 1;
+    game->tick += 1;
 
     adjust_input();
 }
 
 static void game_loop()
 {
-    game.current_time = get_time_tick() - game.start_time;
-    uint64 delta_time = game.current_time - game.previous_time;
-    game.previous_time = game.current_time;
-    game.accumulator += delta_time;
-    while (game.accumulator >= game.time_per_update)
+    game->current_time = get_time_tick() - game->start_time;
+    uint64 delta_time = game->current_time - game->previous_time;
+    game->previous_time = game->current_time;
+    game->accumulator += delta_time;
+    while (game->accumulator >= game->time_per_update)
     {
-        if (game.accumulator > 1'000'000'000)
+        if (game->accumulator > 1'000'000'000)
         {
-            game.accumulator = game.time_per_update;
+            game->accumulator = game->time_per_update;
         }
 
         update_game();
 
-        game.accumulator -= game.time_per_update;
-        if (game.accumulator < game.time_per_update)
+        game->accumulator -= game->time_per_update;
+        if (game->accumulator < game->time_per_update)
         {
             render_game();
         }

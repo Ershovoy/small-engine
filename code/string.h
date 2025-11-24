@@ -1,4 +1,4 @@
-#define str8(literal) (Str8){ .length = length(literal), .data = *literal }
+#define str8(literal) (Str8){ .length = lengthof(literal), .data = *literal }
 
 typedef struct
 {

@@ -6,7 +6,7 @@ static void arena_initialize(Arena* arena, int64 capacity)
         arena->memory = memory;
         arena->capacity = capacity;
         arena->offset = 0;
-        arena->commited = 0;
+        arena->committed = 0;
     }
 }
 
@@ -20,14 +20,17 @@ static void* arena_allocate(Arena* arena, int64 size)
         arena->offset += padding;
     }
 
-    if (arena->commited < arena->offset + size)
+    if (arena->committed < arena->offset + size)
     {
-        // int32 commit_size = DEFAULT_COMMIT_SIZE * (size / DEFAULT_COMMIT_SIZE + 1);
+        int32 commit_size = (int32)size;
         int32 remainder = size % MEMORY_PAGE_SIZE;
-        int32 padding = MEMORY_PAGE_SIZE - remainder;
-        int32 commit_size = (int32)size + padding;
-        commit_memory(arena->memory + arena->commited, commit_size);
-        arena->commited += commit_size;
+        if (remainder != 0)
+        {
+            int32 padding = MEMORY_PAGE_SIZE - remainder;
+            commit_size += padding;
+        }
+        commit_memory(arena->memory + arena->committed, commit_size);
+        arena->committed += commit_size;
     }
 
     void* result = arena->memory + arena->offset;

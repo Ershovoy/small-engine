@@ -9,6 +9,8 @@
 
 typedef struct
 {
+    Image_view offscreen;
+
     uint64 start_time;
     uint64 time_per_update;
     uint64 accumulator;
@@ -20,4 +22,4 @@ typedef struct
     float32 y;
 } Game;
 
-static Game game = { 0 };
+static Game* game = { 0 };

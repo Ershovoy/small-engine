@@ -2,11 +2,7 @@ void unload_game_dll()
 {
     if (game_dll)
     {
-        game = **(Game**)GetProcAddress(game_dll, "game_dll");
-        offscreen = **(Image**)GetProcAddress(game_dll, "offscreen_dll");
-        offscreen_view = **(Image_view**)GetProcAddress(game_dll, "offscreen_view_dll");
-        offscreen.memory = offscreen_buffer;
-        //offscreen_view.image = &offscreen;
+        game = **(Game***)GetProcAddress(game_dll, "game_dll");
 
         FreeLibrary(game_dll);
     }
@@ -21,19 +17,17 @@ void load_game_dll()
     if (game_dll)
     {
         process_button = (process_button_function*)GetProcAddress(game_dll, "process_button_dll");
-        reset_input = (reset_input_function*)GetProcAddress(game_dll, "reset_input_dll");
+        reset_input_function_pointer = (reset_input_function*)GetProcAddress(game_dll, "reset_input_dll");
         initialize_game = (initialize_game_function*)GetProcAddress(game_dll, "initialize_game_dll");
         game_loop = (game_loop_function*)GetProcAddress(game_dll, "game_loop_dll");
-        change_target_resolution = (change_target_resolution_function*)GetProcAddress(game_dll, "change_target_resolution_dll");
 
         Platform_api** platform_api_dll = (Platform_api**)GetProcAddress(game_dll, "platform_api_dll");
         **platform_api_dll = platform_api;
-        Game** game_dll2 = (Game**)GetProcAddress(game_dll, "game_dll");
-        **game_dll2 = game;
-        Image** offscreen_dll = (Image**)GetProcAddress(game_dll, "offscreen_dll");
-        **offscreen_dll = offscreen;
-        Image_view** offscreen_view_dll = (Image_view**)GetProcAddress(game_dll, "offscreen_view_dll");
-        **offscreen_view_dll = offscreen_view;
+        Game*** game_state_dll = (Game***)GetProcAddress(game_dll, "game_dll");
+        **game_state_dll = game;
+
+        int a = 0;
+        a += 1;
     }
 }
 
@@ -71,4 +65,12 @@ void update_debug()
 void deinitialize_debug()
 {
     unload_game_dll();
+}
+
+void reset_input()
+{
+    if (reset_input_function_pointer)
+    {
+        reset_input_function_pointer();
+    }
 }

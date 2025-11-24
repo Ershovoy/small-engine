@@ -13,10 +13,8 @@ typedef void process_button_function(Button button, bool32 is_down);
 typedef void reset_input_function();
 typedef bool32 initialize_game_function();
 typedef void game_loop_function();
-typedef void change_target_resolution_function(int32 target_width, int32 target_height);
 
 static process_button_function* process_button;
-static reset_input_function* reset_input;
+static reset_input_function* reset_input_function_pointer;
 static initialize_game_function* initialize_game;
 static game_loop_function* game_loop;
-static change_target_resolution_function* change_target_resolution;

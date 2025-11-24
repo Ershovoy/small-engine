@@ -3,43 +3,30 @@
 
 // }
 
-static void change_target_resolution(int32 target_width, int32 target_height)
+static void clear(Image_view image_view, Color color)
 {
-    int32 scale_x = target_width / offscreen_view.width;
-    int32 scale_y = target_height / offscreen_view.height;
-
-    int32 scale = 1;
-    scale = min(scale_x, scale_y);
-
-    offscreen_view.scale = scale;
-    offscreen_view.horizontal_padding = (target_width - scale * offscreen_view.width) / 2;
-    offscreen_view.vertical_padding = (target_height - scale * offscreen_view.height) / 2;
-}
-
-static void clear(Color color)
-{
-    uint32* image_row = offscreen_view.image->memory;
-    for (int32 y = 0; y < offscreen_view.height; y += 1)
+    uint32* image_row = image_view.image->memory;
+    for (int32 y = 0; y < image_view.height; y += 1)
     {
         uint32* image_pixel = image_row;
-        for (int32 x = 0; x < offscreen_view.width; x += 1)
+        for (int32 x = 0; x < image_view.width; x += 1)
         {
             *image_pixel = *(uint32*)&color;
 
             image_pixel += 1;
         }
-        image_row += offscreen_view.width;
+        image_row += image_view.width;
     }
 }
 
-static void draw_pixel(Color color, Vec2 position)
+static void draw_pixel(Image_view image_view, Color color, Vec2 position)
 {
     int32 x = round_float32_to_int32(position.e1);
     int32 y = round_float32_to_int32(position.e2);
 
-    if (x >= 0 && y >= 0 && x < offscreen_view.width && y < offscreen_view.height)
+    if (x >= 0 && y >= 0 && x < image_view.width && y < image_view.height)
     {
-        offscreen_view.image->memory[y * offscreen_view.width + x] = *(uint32*)&color;
+        image_view.image->memory[y * image_view.width + x] = *(uint32*)&color;
     }
 }
 
@@ -67,18 +54,18 @@ static void draw_pixel(Color color, Vec2 position)
 static void draw_horizontal_line(uint8 red, uint8 green, uint8 blue, float32 y)
 {
     int32 y2 = round_float32_to_int32(y);
-    for (int32 x = 0; x < offscreen_view.width; x += 1)
+    for (int32 x = 0; x < game->offscreen.width; x += 1)
     {
-        offscreen_view.image->memory[y2 * offscreen_view.width + x] = (uint32)(red | green << 8 | blue << 16);
+        game->offscreen.image->memory[y2 * game->offscreen.width + x] = (uint32)(red | green << 8 | blue << 16);
     }
 }
 
 static void draw_vertical_line(uint8 red, uint8 green, uint8 blue, float32 x)
 {
     int32 x2 = round_float32_to_int32(x);
-    for (int32 y = 0; y < offscreen_view.height; y += 1)
+    for (int32 y = 0; y < game->offscreen.height; y += 1)
     {
-        offscreen_view.image->memory[y * offscreen_view.width + x2] = (uint32)(red | green << 8 | blue << 16);
+        game->offscreen.image->memory[y * game->offscreen.width + x2] = (uint32)(red | green << 8 | blue << 16);
     }
 }
 
@@ -97,13 +84,13 @@ static void draw_circle(uint8 red, uint8 green, uint8 blue, float32 x, float32 y
     {
         bottom = 0;
     }
-    if (right > offscreen_view.width)
+    if (right > game->offscreen.width)
     {
-        right = offscreen_view.width;
+        right = game->offscreen.width;
     }
-    if (top > offscreen_view.height)
+    if (top > game->offscreen.height)
     {
-        top = offscreen_view.height;
+        top = game->offscreen.height;
     }
 
     for (int32 i = bottom; i < top; i += 1)
@@ -114,7 +101,7 @@ static void draw_circle(uint8 red, uint8 green, uint8 blue, float32 x, float32 y
 
             if (distance < radius)
             {
-                offscreen_view.image->memory[i * offscreen_view.width + j] = (uint32)(red | green << 8 | blue << 16);
+                game->offscreen.image->memory[i * game->offscreen.width + j] = (uint32)(red | green << 8 | blue << 16);
             }
         }
     }

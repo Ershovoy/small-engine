@@ -21,19 +21,8 @@ typedef struct
 typedef struct
 {
     Image* image;
-    int32 base_width;
-    int32 base_height;
     int32 width;
     int32 height;
-    int32 scale;
-    int32 target_width;
-    int32 target_height;
-    int32 translate_x;
-    int32 translate_y;
-    int32 horizontal_padding;
-    int32 vertical_padding;
+    int32 offset_x;
+    int32 offset_y;
 } Image_view;
-
-static uint32 offscreen_buffer[MAX_GAME_HORIZONTAL_RESOLUTION * MAX_GAME_VERTICAL_RESOLUTION] = { 0 };
-static Image offscreen = { 0 };
-static Image_view offscreen_view = { 0 };

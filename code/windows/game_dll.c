@@ -37,11 +37,6 @@ __declspec(dllexport) void game_loop_dll()
     game_loop();
 }
 
-__declspec(dllexport) void change_target_resolution_dll(int32 target_width, int32 target_height)
-{
-    change_target_resolution(target_width, target_height);
-}
-
 #ifdef NO_C_RUNTIME
 BOOL WINAPI DllMainCRTStartup(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {

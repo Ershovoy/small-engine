@@ -27,9 +27,9 @@ int32 _fltused;
 #include "api.c"
 
 LRESULT CALLBACK window_procedure(HWND   window,
-    UINT   message,
-    WPARAM wParam,
-    LPARAM lParam)
+                                  UINT   message,
+                                  WPARAM wParam,
+                                  LPARAM lParam)
 {
     LRESULT result = { 0 };
     switch (message)
@@ -77,25 +77,27 @@ LRESULT CALLBACK window_procedure(HWND   window,
             PAINTSTRUCT paint_struct;
             HDC device_context = BeginPaint(window, &paint_struct);
 
-            // int32 present_width = offscreen_view.width * offscreen_view.scale;
-            // int32 present_height = offscreen_view.height * offscreen_view.scale;
-            // int32 present_min_x = (client_width - present_width) / 2;
-            // int32 present_max_x = (client_width + present_width) / 2;
-            // int32 present_min_y = (client_height - present_height) / 2;
-            // int32 present_max_y = (client_height + present_height) / 2;
+			int32 scale_x = client_width / GAME_HORIZONTAL_RESOLUTION;
+			int32 scale_y = client_height / GAME_VERTICAL_RESOLUTION;
 
-            int32 present_width = GAME_HORIZONTAL_RESOLUTION;
-            int32 present_height = GAME_VERTICAL_RESOLUTION;
-            int32 present_min_x = 0;
-            int32 present_max_x = client_width;
-            int32 present_min_y = 0;
-            int32 present_max_y = client_height;
+			int32 scale = 0;
+			if (scale_x < scale_y)
+				scale = scale_x;
+			else
+				scale = scale_y;
 
-            // StretchBlt(device_context, offscreen_view.horizontal_padding, offscreen_view.vertical_padding, client_width - offscreen_view.horizontal_padding * 2, client_height - offscreen_view.vertical_padding * 2,
-            //            memory_device_context, 0, offscreen_view.height - 1, offscreen_view.width, -offscreen_view.height, SRCCOPY);
+			int32 horizontal_padding = (client_width - scale * GAME_HORIZONTAL_RESOLUTION) / 2;
+			int32 vertical_padding = (client_height - scale * GAME_VERTICAL_RESOLUTION) / 2;
 
-            StretchBlt(device_context, 0, 0, client_width, client_height,
-                       memory_device_context, 0, GAME_VERTICAL_RESOLUTION - 1, GAME_HORIZONTAL_RESOLUTION, -GAME_VERTICAL_RESOLUTION, SRCCOPY);
+            int32 present_width = GAME_HORIZONTAL_RESOLUTION * scale;
+            int32 present_height = GAME_VERTICAL_RESOLUTION * scale;
+            int32 present_min_x = (client_width - present_width) / 2;
+            int32 present_max_x = (client_width + present_width) / 2;
+            int32 present_min_y = (client_height - present_height) / 2;
+            int32 present_max_y = (client_height + present_height) / 2;
+
+            StretchBlt(device_context, present_min_x , present_min_y, present_width, present_height,
+            		   memory_device_context, 0, GAME_VERTICAL_RESOLUTION - 1, GAME_HORIZONTAL_RESOLUTION, -GAME_VERTICAL_RESOLUTION, SRCCOPY);
 
             EndPaint(window, &paint_struct);
 
@@ -210,8 +212,6 @@ void process_window_messages()
                     SetWindowPos(window, HWND_TOP, 0, 0, 640, 480, SWP_FRAMECHANGED);
                 }
 
-
-
                 break;
             }
             case WM_MOUSEMOVE:
@@ -266,8 +266,6 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
 #ifndef INTERNAL
         update_debug();
 #endif
-
-        //change_target_resolution(client_width, client_height);
 
         process_window_messages();
 

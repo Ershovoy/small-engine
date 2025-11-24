@@ -52,7 +52,7 @@ static void* reserve_memory_implementation(uint64 size)
 
 static void* commit_memory_implementation(void* memory, uint64 size)
 {
-    return VirtualAlloc(0, size, MEM_COMMIT, PAGE_READWRITE);
+    return VirtualAlloc(memory, size, MEM_COMMIT, PAGE_READWRITE);
 }
 
 static void* allocate_memory_implementation(uint64 size)
