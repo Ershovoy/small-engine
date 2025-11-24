@@ -2,15 +2,24 @@ void unload_game_dll()
 {
     if (game_dll)
     {
+        process_button = 0;
+        reset_input_function_pointer = 0;
+        initialize_game = 0;
+        game_loop = 0;
+
         game = **(Game***)GetProcAddress(game_dll, "game_dll");
 
         FreeLibrary(game_dll);
+        game_dll = 0;
     }
 }
 
 void load_game_dll()
 {
-    CopyFileW(GAME_DLL_FILE_PATH, GAME_DLL_TEMPORARY_FILE_PATH, FALSE);
+	while (!CopyFileW(GAME_DLL_FILE_PATH, GAME_DLL_TEMPORARY_FILE_PATH, FALSE))
+    {
+        Sleep(1);
+    }
 
     game_dll = LoadLibraryW(GAME_DLL_TEMPORARY_FILE_PATH);
 
@@ -25,9 +34,6 @@ void load_game_dll()
         **platform_api_dll = platform_api;
         Game*** game_state_dll = (Game***)GetProcAddress(game_dll, "game_dll");
         **game_state_dll = game;
-
-        int a = 0;
-        a += 1;
     }
 }
 
