@@ -43,10 +43,10 @@ static void render_game()
 
     draw_circle(255, 0, 255,position.e1, position.e2, 10);
 
-    // draw_horizontal_line(255, 255, 255, 0);
-    // draw_horizontal_line(255, 255, 255, (float32)game->offscreen.height);
-    // draw_vertical_line(255, 255, 255, 0);
-    // draw_vertical_line(255, 255, 255, (float32)game->offscreen.width);
+    //draw_horizontal_line(255, 255, 255, 0);
+    //draw_horizontal_line(255, 255, 255, (float32)game->offscreen.height);
+    draw_vertical_line(255, 255, 255, 0);
+    draw_vertical_line(255, 255, 255, (float32)game->offscreen.width);
 
     // draw_circle(offscreen, RED, 32, 32, 8);
     // draw_circle(offscreen, RED, 1000, 1000, 32);

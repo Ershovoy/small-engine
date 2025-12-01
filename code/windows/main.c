@@ -26,6 +26,34 @@ int32 _fltused;
 #include "main.h"
 #include "api.c"
 
+void toggle_fullscreen()
+{
+    if (!is_fullscreen)
+    {
+        GetWindowRect(window, &previous_windowed_rect);
+        previous_window_style = GetWindowLongPtrW(window, GWL_STYLE);
+
+        int32 screen_width = GetSystemMetrics(SM_CXSCREEN);
+        int32 screen_height = GetSystemMetrics(SM_CYSCREEN);
+
+        SetWindowLongPtrW(window, GWL_STYLE, WS_VISIBLE | WS_POPUP);
+
+        SetWindowPos(window, HWND_TOP, 0, 0, screen_width, screen_height, SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+    }
+    else
+    {
+        SetWindowLongPtrW(window, GWL_STYLE, previous_window_style);
+        SetWindowPos(window, HWND_TOP,
+                     previous_windowed_rect.left,
+                     previous_windowed_rect.top,
+                     previous_windowed_rect.right - previous_windowed_rect.left,
+                     previous_windowed_rect.bottom - previous_windowed_rect.top,
+                     SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+    }
+
+    is_fullscreen = !is_fullscreen;
+}
+
 LRESULT CALLBACK window_procedure(HWND   window,
                                   UINT   message,
                                   WPARAM wParam,
@@ -36,12 +64,12 @@ LRESULT CALLBACK window_procedure(HWND   window,
     {
         case WM_CLOSE:
         {
-            is_running = 0;
             DestroyWindow(window);
             break;
         }
         case WM_DESTROY:
         {
+            is_running = 0;
             PostQuitMessage(0);
             break;
         }
@@ -110,6 +138,29 @@ LRESULT CALLBACK window_procedure(HWND   window,
 
             break;
         }
+        case WM_KEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
+        {
+            WORD key_code = LOWORD(wParam);
+            WORD key_flags = HIWORD(lParam);
+
+            BOOL is_key_down = (key_flags & KF_UP) != KF_UP;
+            BOOL was_key_down = (key_flags & KF_REPEAT) == KF_REPEAT;
+
+            if ((key_code == VK_ESCAPE) && (is_key_down != was_key_down) && (is_key_down))
+            {
+                DestroyWindow(window);
+            }
+
+            if ((key_code == VK_F11) && (is_key_down != was_key_down) && (is_key_down))
+            {
+                toggle_fullscreen();
+            }
+
+            break;
+        }
         default:
         {
             result = DefWindowProcW(window, message, wParam, lParam);
@@ -157,6 +208,11 @@ void process_window_messages()
     {
         switch (message.message)
         {
+            case WM_QUIT:
+            {
+                is_running = 0;
+                break;
+            }
             case WM_KEYDOWN:
             case WM_KEYUP:
             case WM_SYSKEYDOWN:
@@ -191,25 +247,11 @@ void process_window_messages()
                 {
                     process_button(BUTTON_WHEEL_UP, 1);
                     process_button(BUTTON_WHEEL_UP, 0);
-
-                    // Retrieve screen dimensions
-                    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-                    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-
-                    // Set window style to WS_POPUP to remove borders and title bar
-                    SetWindowLongPtrA(window, GWL_STYLE, WS_VISIBLE | WS_POPUP);
-
-                    // Position the window to cover the entire screen
-                    SetWindowPos(window, HWND_TOP, 0, 0, screenWidth, screenHeight, SWP_FRAMECHANGED);
-
                 }
                 else
                 {
                     process_button(BUTTON_WHEEL_DOWN, 1);
                     process_button(BUTTON_WHEEL_DOWN, 0);
-
-                    SetWindowLongPtrA(window, GWL_STYLE, window_style | WS_POPUP);
-                    SetWindowPos(window, HWND_TOP, 0, 0, 640, 480, SWP_FRAMECHANGED);
                 }
 
                 break;

@@ -12,3 +12,7 @@ static uint32* device_bitmap_memory = 0;
 
 static DWORD window_style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 static DWORD window_extended_style = 0;
+
+static bool32 is_fullscreen = 0;
+static RECT previous_windowed_rect = { 0 };
+static LONG_PTR previous_window_style = { 0 };
