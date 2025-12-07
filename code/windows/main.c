@@ -283,6 +283,7 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
     platform_api.commit_memory = commit_memory_implementation;
     platform_api.decommit_memory = decommit_memory_implementation;
     platform_api.release_memory = release_memory_implementation;
+    platform_api.console_write = console_write_implementation;
     platform_api.present_offscreen = present_offscreen_implementation;
 
     memory_device_context = CreateCompatibleDC(device_context);
@@ -333,6 +334,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
     instance = GetModuleHandleW(0);
     if (!instance)
+        ExitProcess(1);
+
+    if (!AllocConsole())
         ExitProcess(1);
 
     window = initialize_window(instance, client_width, client_height);

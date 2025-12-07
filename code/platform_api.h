@@ -2,13 +2,18 @@ typedef uint64 get_time_tick_function();
 
 typedef void sleep_function(int32 nanoseconds);
 
-typedef uint32 get_file_size_function(char16* file_name);
-typedef bool32 read_file_function(char16* file_name, void* memory);
+typedef uint32 get_file_size_function(char8* file_name);
+typedef bool32 read_file_function(char8* file_name, void* memory);
 
 typedef void* reserve_memory_function(uint64 size);
 typedef void* commit_memory_function(void* memory, uint64 size);
 typedef void decommit_memory_function(void* memory, uint64 size);
 typedef void release_memory_function(void* memory);
+
+typedef void console_write_function(char8* buffer, int64 length);
+
+typedef void net_send_function();
+typedef void net_receive_function();
 
 typedef void present_offscreen_function(void* memory, int32 width, int32 height);
 
@@ -25,6 +30,8 @@ typedef struct
     commit_memory_function* commit_memory;
     decommit_memory_function* decommit_memory;
     release_memory_function* release_memory;
+
+    console_write_function* console_write;
 
     present_offscreen_function* present_offscreen;
 } Platform_api;

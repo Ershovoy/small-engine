@@ -1,5 +1,6 @@
 #include "game.h"
 #include "math.c"
+#include "string.c"
 #include "input.c"
 #include "renderer.c"
 #include "platform_api.c"
@@ -11,10 +12,10 @@ static bool32 initialize_game()
     arena_initialize(&arena, GIGABYTES(1));
     game = arena_allocate(&arena, sizeof(Game));
 
-    Image* image = arena_allocate(&arena, sizeof(Image));
-    image->memory = arena_allocate(&arena, MAX_GAME_HORIZONTAL_RESOLUTION * MAX_GAME_VERTICAL_RESOLUTION);
-    image->width = MAX_GAME_HORIZONTAL_RESOLUTION;
-    image->height = MAX_GAME_VERTICAL_RESOLUTION;
+    Image image = { 0 };
+    image.memory = arena_allocate(&arena, MAX_GAME_HORIZONTAL_RESOLUTION * MAX_GAME_VERTICAL_RESOLUTION);
+    image.width = MAX_GAME_HORIZONTAL_RESOLUTION;
+    image.height = MAX_GAME_VERTICAL_RESOLUTION;
 
     Image_view image_view = { 0 };
     image_view.image = image;
@@ -63,6 +64,7 @@ static void render_game()
 
 static void update_game()
 {
+    console_write(STRING_LITERAL("Hello, World!\n"));
     if (is_button_pressed(BUTTON_WHEEL_UP))
     {
         // camera.width /= 2;

@@ -1,7 +1,7 @@
-#define str8(literal) (Str8){ .length = lengthof(literal), .data = *literal }
+#define STRING_LITERAL(literal) (String){ .length = lengthof(literal), .data = literal }
 
 typedef struct
 {
     int64 length;
     char8* data;
-} Str8;
+} String;

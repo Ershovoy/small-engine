@@ -8,12 +8,12 @@ static uint64 get_time_tick()
     return platform_api.get_time_tick();
 }
 
-static uint32 get_file_size(char16* file_name)
+static uint32 get_file_size(char8* file_name)
 {
     return platform_api.get_file_size(file_name);
 }
 
-static bool32 read_file(char16* file_name, void* memory)
+static bool32 read_file(char8* file_name, void* memory)
 {
     return platform_api.read_file(file_name, memory);
 }
@@ -38,7 +38,12 @@ static void release_memory(void* memory)
     platform_api.release_memory(memory);
 }
 
+static void console_write(String string)
+{
+    platform_api.console_write(string.data, string.length);
+}
+
 static void present_offscreen(Image_view offscreen_view)
 {
-    platform_api.present_offscreen(offscreen_view.image->memory, offscreen_view.width, offscreen_view.height);
+    platform_api.present_offscreen(offscreen_view.image.memory, offscreen_view.width, offscreen_view.height);
 }

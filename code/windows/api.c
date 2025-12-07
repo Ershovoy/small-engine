@@ -1,12 +1,22 @@
-static uint32 get_file_size_implementation(char16* file_name)
+static void char8_to_char16(char8* source, int64 length, char16* destination)
+{
+    for (int32 i = 0; i < length; i += 1)
+    {
+        destination[i] = source[i];
+    }
+    destination[length] = 0;
+}
+
+static uint32 get_file_size_implementation(char8* file_name)
 {
     uint32 result = 0;
 
-    HANDLE file_handle = CreateFileW(file_name, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+    char8_to_char16(file_name, lengthof(file_name), (char16*)scratch_buffer);
+    HANDLE file_handle = CreateFileW((char16*)scratch_buffer, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
     if (file_handle != INVALID_HANDLE_VALUE)
     {
         DWORD file_size = GetFileSize(file_handle, 0);
-        if(file_size != INVALID_FILE_SIZE)
+        if (file_size != INVALID_FILE_SIZE)
         {
             result = file_size;
         }
@@ -17,11 +27,12 @@ static uint32 get_file_size_implementation(char16* file_name)
     return result;
 }
 
-static bool32 read_file_implementation(char16* file_name, void* memory)
+static bool32 read_file_implementation(char8* file_name, void* memory)
 {
     bool32 result = 0;
 
-    HANDLE file_handle = CreateFileW(file_name, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+    char8_to_char16(file_name, lengthof(file_name), (char16*)scratch_buffer);
+    HANDLE file_handle = CreateFileW((char16*)scratch_buffer, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
     if (file_handle != INVALID_HANDLE_VALUE)
     {
         DWORD file_size = GetFileSize(file_handle, 0);
@@ -94,6 +105,19 @@ static uint64 get_time_tick_implementation()
     int64 remainder = current_counter % perfomance_counter_frequency;
 
     return (quotient * 1'000'000'000) + (remainder * 1'000'000'000) / perfomance_counter_frequency;
+}
+
+
+static void console_write_implementation(char8* buffer, int64 length)
+{
+    HANDLE output_console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    char8_to_char16(buffer, length, (char16*)scratch_buffer);
+    WriteConsoleW(output_console_handle, (char16*)scratch_buffer, (DWORD)length, 0, 0);
+}
+
+static bool32 console_read_implementation(char8* string, int64* length)
+{
+
 }
 
 static void present_offscreen_implementation(void* memory, int32 width, int32 height)

@@ -20,7 +20,7 @@ typedef struct
 
 typedef struct
 {
-    Image* image;
+    Image image;
     int32 width;
     int32 height;
     int32 offset_x;

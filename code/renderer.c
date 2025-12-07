@@ -5,7 +5,7 @@
 
 static void clear(Image_view image_view, Color color)
 {
-    uint32* image_row = image_view.image->memory;
+    uint32* image_row = image_view.image.memory;
     for (int32 y = 0; y < image_view.height; y += 1)
     {
         uint32* image_pixel = image_row;
@@ -26,7 +26,7 @@ static void draw_pixel(Image_view image_view, Color color, Vec2 position)
 
     if (x >= 0 && y >= 0 && x < image_view.width && y < image_view.height)
     {
-        image_view.image->memory[y * image_view.width + x] = *(uint32*)&color;
+        image_view.image.memory[y * image_view.width + x] = *(uint32*)&color;
     }
 }
 
@@ -56,7 +56,7 @@ static void draw_horizontal_line(uint8 red, uint8 green, uint8 blue, float32 y)
     int32 y2 = round_float32_to_int32(y);
     for (int32 x = 0; x < game->offscreen.width; x += 1)
     {
-        game->offscreen.image->memory[y2 * game->offscreen.width + x] = (uint32)(red | green << 8 | blue << 16);
+        game->offscreen.image.memory[y2 * game->offscreen.width + x] = (uint32)(red | green << 8 | blue << 16);
     }
 }
 
@@ -65,7 +65,7 @@ static void draw_vertical_line(uint8 red, uint8 green, uint8 blue, float32 x)
     int32 x2 = round_float32_to_int32(x);
     for (int32 y = 0; y < game->offscreen.height; y += 1)
     {
-        game->offscreen.image->memory[y * game->offscreen.width + x2] = (uint32)(red | green << 8 | blue << 16);
+        game->offscreen.image.memory[y * game->offscreen.width + x2] = (uint32)(red | green << 8 | blue << 16);
     }
 }
 
@@ -101,7 +101,7 @@ static void draw_circle(uint8 red, uint8 green, uint8 blue, float32 x, float32 y
 
             if (distance < radius)
             {
-                game->offscreen.image->memory[i * game->offscreen.width + j] = (uint32)(red | green << 8 | blue << 16);
+                game->offscreen.image.memory[i * game->offscreen.width + j] = (uint32)(red | green << 8 | blue << 16);
             }
         }
     }
