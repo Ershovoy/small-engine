@@ -17,5 +17,7 @@ static bool32 is_fullscreen = 0;
 static RECT previous_windowed_rect = { 0 };
 static LONG_PTR previous_window_style = { 0 };
 
+static SOCKET sock = { 0 };
+
 #define SCRATCH_BUFFER_SIZE MEGABYTES(16)
 static byte* scratch_buffer[SCRATCH_BUFFER_SIZE];

@@ -6,6 +6,7 @@
 #include "platform_api.h"
 #include "arena.h"
 #include "string.h"
+#include "sound.h"
 
 typedef struct
 {

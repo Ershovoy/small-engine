@@ -11,6 +11,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <windowsx.h>
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#include <winsock2.h>
 __declspec(dllimport) LONG NTAPI NtDelayExecution(BOOLEAN Alertable, LARGE_INTEGER* DelayInterval);
 #endif
 
@@ -106,17 +108,17 @@ LRESULT CALLBACK window_procedure(HWND   window,
             PAINTSTRUCT paint_struct;
             HDC device_context = BeginPaint(window, &paint_struct);
 
-			int32 scale_x = client_width / GAME_HORIZONTAL_RESOLUTION;
-			int32 scale_y = client_height / GAME_VERTICAL_RESOLUTION;
+            int32 scale_x = client_width / GAME_HORIZONTAL_RESOLUTION;
+            int32 scale_y = client_height / GAME_VERTICAL_RESOLUTION;
 
-			int32 scale = 0;
-			if (scale_x < scale_y)
-				scale = scale_x;
-			else
-				scale = scale_y;
+            int32 scale = 0;
+            if (scale_x < scale_y)
+                scale = scale_x;
+            else
+                scale = scale_y;
 
-			int32 horizontal_padding = (client_width - scale * GAME_HORIZONTAL_RESOLUTION) / 2;
-			int32 vertical_padding = (client_height - scale * GAME_VERTICAL_RESOLUTION) / 2;
+            int32 horizontal_padding = (client_width - scale * GAME_HORIZONTAL_RESOLUTION) / 2;
+            int32 vertical_padding = (client_height - scale * GAME_VERTICAL_RESOLUTION) / 2;
 
             int32 present_width = GAME_HORIZONTAL_RESOLUTION * scale;
             int32 present_height = GAME_VERTICAL_RESOLUTION * scale;
@@ -285,6 +287,8 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
     platform_api.decommit_memory = decommit_memory_implementation;
     platform_api.release_memory = release_memory_implementation;
     platform_api.console_write = console_write_implementation;
+    platform_api.net_send = net_send_implementation;
+    platform_api.net_receive = net_receive_implementation;
     platform_api.play_sound = xaudio2_play_sound;
     platform_api.present_offscreen = present_offscreen_implementation;
 
@@ -344,6 +348,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (!initialize_xaudio2())
         ExitProcess(1);
 
+    WSADATA winsock_data;
+    if (WSAStartup(0x202, &winsock_data))
+        ExitProcess(1);
+
+    sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock == INVALID_SOCKET)
+        ExitProcess(1);
+
+    uint64 non_blocking = 1;
+    if (ioctlsocket(sock, FIONBIO, &(u_long)non_blocking) != NO_ERROR)
+        ExitProcess(1);
+
+    // Только на сервере!
+    SOCKADDR_IN local_address = { 0 };
+    local_address.sin_family = AF_INET;
+    local_address.sin_port = htons(9999);
+    local_address.sin_addr.s_addr = INADDR_ANY;
+    if (bind(sock, (SOCKADDR*)&local_address, sizeof(local_address)) == SOCKET_ERROR)
+        ExitProcess(1);
+
     window = initialize_window(instance, client_width, client_height);
     if (!window)
         ExitProcess(1);
@@ -366,7 +390,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     WaitForSingleObject(thread_handle, INFINITE);
     CloseHandle(thread_handle);
+
     destroy_xaudio2();
+    WSACleanup();
 
     ReleaseDC(window, device_context);
 

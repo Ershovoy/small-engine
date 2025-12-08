@@ -120,6 +120,35 @@ static bool32 console_read_implementation(char8* string, int64* length)
 
 }
 
+static bool32 net_send_implementation(void* data, uint64 size)
+{
+    SOCKADDR_IN server_address;
+    server_address.sin_family = AF_INET;
+    // TODO:
+    server_address.sin_port = htons(9999);
+    server_address.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+    if (sendto(sock, (char8*)data, (int32)size, 0, (SOCKADDR*)&server_address, sizeof(server_address)) == SOCKET_ERROR)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
+static bool32 net_receive_implementation(void* buffer, uint64 size)
+{
+    SOCKADDR_IN from;
+    int32 from_size = sizeof(from);
+    int32 bytes_received = recvfrom(sock, (char8*)buffer, (int32)size, 0, (SOCKADDR*)&from, &from_size);
+    int32 error = WSAGetLastError();
+    if (bytes_received < 0 && error == WSAEWOULDBLOCK)
+    {
+        return 0;
+    }
+
+    return 1;
+}
+
 static void present_offscreen_implementation(void* memory, int32 width, int32 height)
 {
     uint32* source_row = (uint32*)memory;

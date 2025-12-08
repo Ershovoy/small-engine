@@ -4,14 +4,18 @@ typedef void sleep_function(int32 nanoseconds);
 
 typedef uint32 get_file_size_function(char8* file_name);
 typedef bool32 read_file_function(char8* file_name, void* memory);
+typedef void write_file_function();
 
 typedef void* reserve_memory_function(uint64 size);
 typedef void* commit_memory_function(void* memory, uint64 size);
 typedef void decommit_memory_function(void* memory, uint64 size);
 typedef void release_memory_function(void* memory);
 
+typedef void console_read_function();
 typedef void console_write_function(char8* buffer, int64 length);
 
+typedef bool32 net_send_function(void* data, uint64 size);
+typedef bool32 net_receive_function(void* buffer, uint64 size);
 
 typedef void play_sound_function(void* memory, uint32 size, int32 sample_rate, int32 bits_per_sample, int32 number_of_channels);
 
@@ -32,6 +36,11 @@ typedef struct
     release_memory_function* release_memory;
 
     console_write_function* console_write;
+
+    net_send_function* net_send;
+    net_receive_function* net_receive;
+
+    play_sound_function* play_sound;
 
     present_offscreen_function* present_offscreen;
 } Platform_api;

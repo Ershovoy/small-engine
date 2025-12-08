@@ -28,6 +28,14 @@ static bool32 initialize_game()
     game->time_per_update = (uint64)1'000'000'000 / 60;
     game->start_time = get_time_tick();
 
+    #define SOCKET_BUFFER_SIZE 256
+    char8 socket_message[SOCKET_BUFFER_SIZE] = "Hello, Socket!\n";
+    bool32 result1 = platform_api.net_send(socket_message, SOCKET_BUFFER_SIZE);
+
+    char8 socket_buffer[SOCKET_BUFFER_SIZE];
+    bool32 result2 = platform_api.net_receive(socket_buffer, SOCKET_BUFFER_SIZE);
+    result2 = platform_api.net_receive(socket_buffer, SOCKET_BUFFER_SIZE);
+
     return 1;
 }
 
@@ -130,6 +138,14 @@ static void update_game()
 
 static void game_loop()
 {
+    // Сервер
+    // получаем инпуты игроков
+    // ждем наступление тика
+    // отправляем инпуты
+
+    // Клиент
+    // Ждем инпут
+    // симуляция
     game->current_time = get_time_tick() - game->start_time;
     uint64 delta_time = game->current_time - game->previous_time;
     game->previous_time = game->current_time;
