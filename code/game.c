@@ -5,6 +5,7 @@
 #include "renderer.c"
 #include "platform_api.c"
 #include "arena.c"
+// #include "sound.c"
 
 static bool32 initialize_game()
 {

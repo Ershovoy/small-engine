@@ -12,8 +12,8 @@ typedef void release_memory_function(void* memory);
 
 typedef void console_write_function(char8* buffer, int64 length);
 
-typedef void net_send_function();
-typedef void net_receive_function();
+
+typedef void play_sound_function(void* memory, uint32 size, int32 sample_rate, int32 bits_per_sample, int32 number_of_channels);
 
 typedef void present_offscreen_function(void* memory, int32 width, int32 height);
 

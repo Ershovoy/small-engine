@@ -43,6 +43,16 @@ static void console_write(String string)
     platform_api.console_write(string.data, string.length);
 }
 
+void play_sound(Sound sound)
+{
+    if (sound.is_initialized)
+    {
+        platform_api.play_sound(sound.memory, sound.size, sound.sample_rate,
+                                sound.bits_per_sample, sound.number_of_channels);
+    }
+}
+
+
 static void present_offscreen(Image_view offscreen_view)
 {
     platform_api.present_offscreen(offscreen_view.image.memory, offscreen_view.width, offscreen_view.height);

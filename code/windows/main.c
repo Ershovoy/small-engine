@@ -24,6 +24,7 @@ int32 _fltused;
 #endif
 
 #include "main.h"
+#include "xaudio2.c"
 #include "api.c"
 
 void toggle_fullscreen()
@@ -284,6 +285,7 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
     platform_api.decommit_memory = decommit_memory_implementation;
     platform_api.release_memory = release_memory_implementation;
     platform_api.console_write = console_write_implementation;
+    platform_api.play_sound = xaudio2_play_sound;
     platform_api.present_offscreen = present_offscreen_implementation;
 
     memory_device_context = CreateCompatibleDC(device_context);
@@ -339,6 +341,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (!AllocConsole())
         ExitProcess(1);
 
+    if (!initialize_xaudio2())
+        ExitProcess(1);
+
     window = initialize_window(instance, client_width, client_height);
     if (!window)
         ExitProcess(1);
@@ -361,6 +366,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     WaitForSingleObject(thread_handle, INFINITE);
     CloseHandle(thread_handle);
+    destroy_xaudio2();
 
     ReleaseDC(window, device_context);
 
