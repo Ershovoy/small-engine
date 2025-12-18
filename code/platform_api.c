@@ -18,6 +18,11 @@ static bool32 read_file(char8* file_name, void* memory)
     return platform_api.read_file(file_name, memory);
 }
 
+static bool32 write_file(char* file_name, void* data, uint64 size)
+{
+    return platform_api.write_file(file_name, data, size);
+}
+
 static void* reserve_memory(uint64 size)
 {
     return platform_api.reserve_memory(size);

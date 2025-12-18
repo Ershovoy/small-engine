@@ -56,6 +56,31 @@ static bool32 read_file_implementation(char8* file_name, void* memory)
     return result;
 }
 
+static bool32 write_file_implementation(char8* file_name, void* data, uint64 size)
+{
+    bool32 result = 0;
+
+    char8_to_char16(file_name, lengthof(file_name), (char16*)scratch_buffer);
+    HANDLE file_handle = CreateFileW(scratch_buffer, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    if (file_handle != INVALID_HANDLE_VALUE)
+    {
+        // TODO: Write file function can write maximum 2048 megabytes, due to size of its fourth parameter.
+        //       How can we get around it?
+        DWORD bytes_written;
+        if (WriteFile(file_handle, data, size, &bytes_written, 0))
+        {
+            if (bytes_written == size)
+            {
+                result = 1;
+            }
+        }
+
+        CloseHandle(file_handle);
+    }
+
+    return result;
+}
+
 static void* reserve_memory_implementation(uint64 size)
 {
     return VirtualAlloc(0, size, MEM_RESERVE, PAGE_NOACCESS);
@@ -140,9 +165,9 @@ static bool32 net_receive_implementation(void* buffer, uint64 size)
     SOCKADDR_IN from;
     int32 from_size = sizeof(from);
     int32 bytes_received = recvfrom(sock, (char8*)buffer, (int32)size, 0, (SOCKADDR*)&from, &from_size);
-    int32 error = WSAGetLastError();
+        int32 error = WSAGetLastError();
     if (bytes_received < 0 && error == WSAEWOULDBLOCK)
-    {
+        {
         return 0;
     }
 

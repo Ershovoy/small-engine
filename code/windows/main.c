@@ -282,6 +282,7 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
     platform_api.get_time_tick = get_time_tick_implementation;
     platform_api.get_file_size = get_file_size_implementation;
     platform_api.read_file = read_file_implementation;
+    platform_api.write_file = write_file_implementation;
     platform_api.reserve_memory = reserve_memory_implementation;
     platform_api.commit_memory = commit_memory_implementation;
     platform_api.decommit_memory = decommit_memory_implementation;

@@ -4,7 +4,7 @@ typedef void sleep_function(int32 nanoseconds);
 
 typedef uint32 get_file_size_function(char8* file_name);
 typedef bool32 read_file_function(char8* file_name, void* memory);
-typedef void write_file_function();
+typedef bool32 write_file_function(char8* file_name, void* data, uint64 size);
 
 typedef void* reserve_memory_function(uint64 size);
 typedef void* commit_memory_function(void* memory, uint64 size);
@@ -29,6 +29,7 @@ typedef struct
 
     get_file_size_function* get_file_size;
     read_file_function* read_file;
+    write_file_function* write_file;
 
     reserve_memory_function* reserve_memory;
     commit_memory_function* commit_memory;
