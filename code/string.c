@@ -1,59 +1,44 @@
-
-static void revert_string(String string)
+static void revert_string(char8* buffer, int32 length) // или size?
 {
 
 }
 
-//static void str_reverse(char16* buf, int32 len)
-//{
-//    int32 i = 0, j = len - 1;
-//    while (i < j)
-//    {
-//        char16 t = buf[i];
-//        buf[i] = buf[j];
-//        buf[j] = t;
-//        ++i; --j;
-//    }
-//}
+static void uint32_to_string(char8* buffer, int32 size, uint32 value)
+{
+    int32 index = 0;
 
-//static int32 u32_to_str(uint32 value, char16* buffer, int32 buffer_size)
-//{
-//    int32 pos = 0;
+    do
+    {
+        buffer[index] = (char8)('0' + (value % 10));
+        index += 1;
+        value /= 10;
+    } while (value > 0 && index < size - 1);
 
-//    if (buffer_size < 2) return 0;
+    buffer[index] = '\0';
 
-//    if (value == 0)
-//    {
-//        buffer[0] = '0';
-//        buffer[1] = 0;
-//        return 1;
-//    }
+    int32 start = 0;
+    int32 end = index - 1;
+    while (start < end)
+    {
+        char8 temporary = buffer[start];
+        buffer[start] = buffer[end];
+        buffer[end] = temporary;
 
-//    while (value != 0 && pos < buffer_size - 1)
-//    {
-//        buffer[pos++] = (char16)(L'0' + (value % 10));
-//        value /= 10;
-//    }
-//    buffer[pos] = 0;
-//    str_reverse(buffer, pos);
-//    return pos;
-//}
+        start += 1;
+        end -= 1;
+    }
+}
 
-// static int32 int32_to_string(int32 value, char16* buffer, int32 buffer_size)
-// {
-//     int32 pos = 0;
-//     uint32 uval = (uint32)value;
+static void int32_to_string(char8* buffer, int32 size, int32 value)
+{
+    int32 index = 0;
 
-//     if (buffer_size < 2) return 0;
+    if (value < 0)
+    {
+        value = -value;
+        buffer[index] = '-';
+        index += 1;
+    }
 
-//     if (value < 0)
-//     {
-//         if (pos < buffer_size - 1)
-//             buffer[pos++] = L'-';
-//         uval = (uint32)(-value);  /* работает даже для INT32_MIN на two's complement */
-//     }
-
-//     int32 digits = u32_to_str(uval, buffer + pos, buffer_size - pos);
-//     if (digits == 0) return 0;
-//     return pos + digits;
-// }
+    uint32_to_string(buffer + index, size - index, value);
+}

@@ -28,13 +28,15 @@ static bool32 initialize_game()
     game->time_per_update = (uint64)1'000'000'000 / 60;
     game->start_time = get_time_tick();
 
-    #define SOCKET_BUFFER_SIZE 256
-    char8 socket_message[SOCKET_BUFFER_SIZE] = "Hello, Socket!\n";
-    bool32 result1 = platform_api.net_send(socket_message, SOCKET_BUFFER_SIZE);
+    // platform_api.net_bind()
 
-    char8 socket_buffer[SOCKET_BUFFER_SIZE];
-    bool32 result2 = platform_api.net_receive(socket_buffer, SOCKET_BUFFER_SIZE);
-    result2 = platform_api.net_receive(socket_buffer, SOCKET_BUFFER_SIZE);
+    // #define SOCKET_BUFFER_SIZE 256
+    // char8 socket_message[SOCKET_BUFFER_SIZE] = "Hello, Socket!\n";
+    // bool32 result1 = platform_api.net_send(socket_message, SOCKET_BUFFER_SIZE, 0xFFFFFFFF, );
+
+    // char8 socket_buffer[SOCKET_BUFFER_SIZE];
+    // bool32 result2 = platform_api.net_receive(socket_buffer, SOCKET_BUFFER_SIZE);
+    // result2 = platform_api.net_receive(socket_buffer, SOCKET_BUFFER_SIZE);
 
     return 1;
 }
@@ -53,8 +55,8 @@ static void render_game()
 
     draw_circle(255, 0, 255,position.e1, position.e2, 10);
 
-    //draw_horizontal_line(255, 255, 255, 0);
-    //draw_horizontal_line(255, 255, 255, (float32)game->offscreen.height);
+    draw_horizontal_line(255, 255, 255, 0);
+    draw_horizontal_line(255, 255, 255, (float32)game->offscreen.height);
     draw_vertical_line(255, 255, 255, 0);
     draw_vertical_line(255, 255, 255, (float32)game->offscreen.width);
 
@@ -74,6 +76,13 @@ static void render_game()
 static void update_game()
 {
     console_write(STRING_LITERAL("Hello, World!\n"));
+    console_write(STRING_LITERAL("TICK: "));
+    char8 buffer[256] = { 0 };
+    String string = { 0 };
+    string.data = buffer;
+    string.length = int32_to_string((char8*)buffer, 256, -(int32)game->tick);
+    console_write(string);
+    console_write(STRING_LITERAL("\n"));
     if (is_button_pressed(BUTTON_WHEEL_UP))
     {
         // camera.width /= 2;
@@ -146,6 +155,7 @@ static void game_loop()
     // Клиент
     // Ждем инпут
     // симуляция
+
     game->current_time = get_time_tick() - game->start_time;
     uint64 delta_time = game->current_time - game->previous_time;
     game->previous_time = game->current_time;

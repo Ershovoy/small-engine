@@ -125,7 +125,6 @@ typedef struct
     float32 y;
 } Mouse_state;
 
-
 typedef struct
 {
     Button_state buttons[BUTTONS_COUNT];

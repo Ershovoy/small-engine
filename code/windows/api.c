@@ -61,13 +61,13 @@ static bool32 write_file_implementation(char8* file_name, void* data, uint64 siz
     bool32 result = 0;
 
     char8_to_char16(file_name, lengthof(file_name), (char16*)scratch_buffer);
-    HANDLE file_handle = CreateFileW(scratch_buffer, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    HANDLE file_handle = CreateFileW((char16*)scratch_buffer, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
     if (file_handle != INVALID_HANDLE_VALUE)
     {
         // TODO: Write file function can write maximum 2048 megabytes, due to size of its fourth parameter.
         //       How can we get around it?
         DWORD bytes_written;
-        if (WriteFile(file_handle, data, size, &bytes_written, 0))
+        if (WriteFile(file_handle, data, (DWORD)size, (DWORD*)&bytes_written, 0))
         {
             if (bytes_written == size)
             {
@@ -145,32 +145,84 @@ static bool32 console_read_implementation(char8* string, int64* length)
 
 }
 
-static bool32 net_send_implementation(void* data, uint64 size)
+static uint16 net_bind_implementation(uint16 port)
+{
+    SOCKADDR_IN local_address = { 0 };
+    local_address.sin_family = AF_INET;
+    local_address.sin_port = htons(port);
+    local_address.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    int32 bind_result = bind(sock, (SOCKADDR*)&local_address, sizeof(local_address));
+    int32 get_sock_name_result = 0;
+    SOCKADDR_IN bound_address = { 0 };
+    if (bind_result != SOCKET_ERROR)
+    {
+        int32 address_size = sizeof(bound_address);
+
+        get_sock_name_result = !getsockname(sock, (SOCKADDR*)&bound_address, &address_size);
+    }
+
+    uint16 binded_port = 0;
+    if (get_sock_name_result != SOCKET_ERROR)
+    {
+        binded_port = ntohs(bound_address.sin_port);
+    }
+
+    return binded_port;
+}
+
+static bool32 net_send_implementation(void* data, uint64 size, uint32 ip, uint16 port)
 {
     SOCKADDR_IN server_address;
     server_address.sin_family = AF_INET;
-    // TODO:
-    server_address.sin_port = htons(9999);
-    server_address.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
-    if (sendto(sock, (char8*)data, (int32)size, 0, (SOCKADDR*)&server_address, sizeof(server_address)) == SOCKET_ERROR)
+    server_address.sin_port = port;
+    server_address.sin_addr.S_un.S_addr = ip;
+
+    int32 bytes_sent = sendto(sock, (char*)data, (int32)size, 0,
+        (SOCKADDR*)&server_address, sizeof(server_address));
+
+    if (bytes_sent == SOCKET_ERROR)
     {
         return 0;
     }
 
+    // Опционально: можно проверить, что отправлено ровно size байт
+    // if (bytes_sent != (int32)size) return 0;
+
     return 1;
 }
 
-static bool32 net_receive_implementation(void* buffer, uint64 size)
+static bool32 net_receive_implementation(void* buffer, uint64 size, uint32* out_ip, uint16* out_port)
 {
     SOCKADDR_IN from;
     int32 from_size = sizeof(from);
-    int32 bytes_received = recvfrom(sock, (char8*)buffer, (int32)size, 0, (SOCKADDR*)&from, &from_size);
+
+    int32 bytes_received = recvfrom(sock, (char*)buffer, (int32)size, 0,
+        (SOCKADDR*)&from, &from_size);
+
+    if (bytes_received < 0)
+    {
         int32 error = WSAGetLastError();
-    if (bytes_received < 0 && error == WSAEWOULDBLOCK)
+        if (error == WSAEWOULDBLOCK)
         {
+            return 0;  // нет данных (non-blocking режим)
+        }
+        // Другие ошибки — тоже считаем неудачей
         return 0;
     }
 
+    // Если данные успешно получены — заполняем выходные параметры
+    if (out_ip)
+    {
+        *out_ip = ntohl(from.sin_addr.S_un.S_addr);  // переводим в host byte order
+    }
+    if (out_port)
+    {
+        *out_port = ntohs(from.sin_port);
+    }
+
+    // Возвращаем 1 при успешном получении хотя бы одного байта
+    // (по аналогии с send — успех, если что-то принято)
     return 1;
 }
 

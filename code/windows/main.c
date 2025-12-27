@@ -288,8 +288,8 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
     platform_api.decommit_memory = decommit_memory_implementation;
     platform_api.release_memory = release_memory_implementation;
     platform_api.console_write = console_write_implementation;
-    platform_api.net_send = net_send_implementation;
-    platform_api.net_receive = net_receive_implementation;
+    // platform_api.net_send = net_send_implementation;
+    // platform_api.net_receive = net_receive_implementation;
     platform_api.play_sound = xaudio2_play_sound;
     platform_api.present_offscreen = present_offscreen_implementation;
 
@@ -359,14 +359,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     uint64 non_blocking = 1;
     if (ioctlsocket(sock, FIONBIO, &(u_long)non_blocking) != NO_ERROR)
-        ExitProcess(1);
-
-    // Только на сервере!
-    SOCKADDR_IN local_address = { 0 };
-    local_address.sin_family = AF_INET;
-    local_address.sin_port = htons(9999);
-    local_address.sin_addr.s_addr = INADDR_ANY;
-    if (bind(sock, (SOCKADDR*)&local_address, sizeof(local_address)) == SOCKET_ERROR)
         ExitProcess(1);
 
     window = initialize_window(instance, client_width, client_height);
