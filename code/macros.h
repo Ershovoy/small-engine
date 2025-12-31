@@ -5,7 +5,7 @@
 #if DEBUG
 #define assert(expression) if (!(expression)) { *(int32*)0 = 0; }
 #else
-#define assert(expression)
+#define assert(expression) expression
 #endif
 
 #define KILOBYTES(value) ((int64)(value) * 1024)

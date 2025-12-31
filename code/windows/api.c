@@ -109,7 +109,7 @@ static void release_memory_implementation(void* memory)
 
 static void sleep_implementation(int32 nanoseconds)
 {
-    if (nanoseconds > 1'000)
+    if (nanoseconds >= 1'000)
     {
         LARGE_INTEGER delay;
         delay.QuadPart = -nanoseconds / 100;
@@ -173,15 +173,15 @@ static uint16 net_bind_implementation(uint16 port)
 
 static bool32 net_send_implementation(void* data, uint64 size, uint32 ip, uint16 port)
 {
-    SOCKADDR_IN server_address;
+    SOCKADDR_IN server_address = { 0 };
     server_address.sin_family = AF_INET;
-    server_address.sin_port = port;
-    server_address.sin_addr.S_un.S_addr = ip;
+    server_address.sin_port = htons(port);
+    server_address.sin_addr.S_un.S_addr = htonl(ip);
 
-    int32 bytes_sent = sendto(sock, (char*)data, (int32)size, 0,
-        (SOCKADDR*)&server_address, sizeof(server_address));
+    int32 bytes_send = sendto(sock, (char*)data, (int32)size, 0,
+                              (SOCKADDR*)&server_address, sizeof(server_address));
 
-    if (bytes_sent == SOCKET_ERROR)
+    if (bytes_send == SOCKET_ERROR)
     {
         return 0;
     }
@@ -189,7 +189,7 @@ static bool32 net_send_implementation(void* data, uint64 size, uint32 ip, uint16
     // Опционально: можно проверить, что отправлено ровно size байт
     // if (bytes_sent != (int32)size) return 0;
 
-    return 1;
+    return bytes_send == (int32)size;
 }
 
 static bool32 net_receive_implementation(void* buffer, uint64 size, uint32* out_ip, uint16* out_port)
@@ -198,7 +198,7 @@ static bool32 net_receive_implementation(void* buffer, uint64 size, uint32* out_
     int32 from_size = sizeof(from);
 
     int32 bytes_received = recvfrom(sock, (char*)buffer, (int32)size, 0,
-        (SOCKADDR*)&from, &from_size);
+                                    (SOCKADDR*)&from, &from_size);
 
     if (bytes_received < 0)
     {
@@ -221,8 +221,6 @@ static bool32 net_receive_implementation(void* buffer, uint64 size, uint32* out_
         *out_port = ntohs(from.sin_port);
     }
 
-    // Возвращаем 1 при успешном получении хотя бы одного байта
-    // (по аналогии с send — успех, если что-то принято)
     return 1;
 }
 

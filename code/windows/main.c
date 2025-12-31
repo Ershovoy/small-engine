@@ -128,7 +128,10 @@ LRESULT CALLBACK window_procedure(HWND   window,
             int32 present_max_y = (client_height + present_height) / 2;
 
             StretchBlt(device_context, present_min_x , present_min_y, present_width, present_height,
-            		   memory_device_context, 0, GAME_VERTICAL_RESOLUTION - 1, GAME_HORIZONTAL_RESOLUTION, -GAME_VERTICAL_RESOLUTION, SRCCOPY);
+            		   memory_device_context, 0, 0, GAME_HORIZONTAL_RESOLUTION, GAME_VERTICAL_RESOLUTION, SRCCOPY);
+
+            // StretchBlt(device_context, present_min_x , present_min_y, present_width, present_height,
+            // 		   memory_device_context, 0, GAME_VERTICAL_RESOLUTION - 1, GAME_HORIZONTAL_RESOLUTION, -GAME_VERTICAL_RESOLUTION, SRCCOPY);
 
             EndPaint(window, &paint_struct);
 
@@ -184,7 +187,7 @@ HWND initialize_window(HINSTANCE instance, int32 client_width, int32 client_heig
     window_class.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(32512));
     window_class.hIcon = LoadIconW(0, MAKEINTRESOURCEW(32513));
     window_class.hbrBackground = GetStockObject(BLACK_PEN);
-    window_class.lpszClassName = L"Redungeon Classic";
+    window_class.lpszClassName = L"Blobby Volley 3 by Qvil";
 
     RegisterClassExW(&window_class);
 
@@ -288,8 +291,9 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
     platform_api.decommit_memory = decommit_memory_implementation;
     platform_api.release_memory = release_memory_implementation;
     platform_api.console_write = console_write_implementation;
-    // platform_api.net_send = net_send_implementation;
-    // platform_api.net_receive = net_receive_implementation;
+    platform_api.net_bind = net_bind_implementation;
+    platform_api.net_send = net_send_implementation;
+    platform_api.net_receive = net_receive_implementation;
     platform_api.play_sound = xaudio2_play_sound;
     platform_api.present_offscreen = present_offscreen_implementation;
 

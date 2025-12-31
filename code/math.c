@@ -48,3 +48,13 @@ static float32 square_root(float32 x)
 
     return y;
 }
+
+// static Vec2 vec2_add(Vec2 first_summand, second_summand)
+// {
+//     Vec2 sum;
+
+//     sum.e1 = first_summand.e1 + second_summand.e1;
+//     sum.e2 = first_summand.e2 + second_summand.e2;
+
+//     return sum;
+// }

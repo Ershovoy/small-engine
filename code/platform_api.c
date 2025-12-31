@@ -48,7 +48,22 @@ static void console_write(String string)
     platform_api.console_write(string.data, string.length);
 }
 
-void play_sound(Sound sound)
+static uint16 net_bind(uint16 port)
+{
+    return platform_api.net_bind(port);
+}
+
+static bool32 net_send(void* data, uint64 size, uint32 ip, uint16 port)
+{
+    return platform_api.net_send(data, size, ip, port);
+}
+
+static bool32 net_receive(void* buffer, uint64 size, uint32* out_ip, uint16* out_port)
+{
+    return platform_api.net_receive(buffer, size, out_ip, out_port);
+}
+
+static void play_sound(Sound sound)
 {
     if (sound.is_initialized)
     {

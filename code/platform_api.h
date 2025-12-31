@@ -37,6 +37,7 @@ typedef struct
     decommit_memory_function* decommit_memory;
     release_memory_function* release_memory;
 
+    console_read_function* console_read;
     console_write_function* console_write;
 
     net_bind_function* net_bind;
