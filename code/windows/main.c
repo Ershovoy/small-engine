@@ -128,10 +128,7 @@ LRESULT CALLBACK window_procedure(HWND   window,
             int32 present_max_y = (client_height + present_height) / 2;
 
             StretchBlt(device_context, present_min_x , present_min_y, present_width, present_height,
-            		   memory_device_context, 0, 0, GAME_HORIZONTAL_RESOLUTION, GAME_VERTICAL_RESOLUTION, SRCCOPY);
-
-            // StretchBlt(device_context, present_min_x , present_min_y, present_width, present_height,
-            // 		   memory_device_context, 0, GAME_VERTICAL_RESOLUTION - 1, GAME_HORIZONTAL_RESOLUTION, -GAME_VERTICAL_RESOLUTION, SRCCOPY);
+             		   memory_device_context, 0, GAME_VERTICAL_RESOLUTION - 1, GAME_HORIZONTAL_RESOLUTION, -GAME_VERTICAL_RESOLUTION, SRCCOPY);
 
             EndPaint(window, &paint_struct);
 

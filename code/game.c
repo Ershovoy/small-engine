@@ -5,9 +5,9 @@
 #include "renderer.c"
 #include "platform_api.c"
 #include "arena.c"
-// #include "sound.c"
-
-#define IS_SERVER 0
+#include "state.c"
+#include "network.c"
+//#include "sound.c"
 
 static bool32 initialize_game()
 {
@@ -27,350 +27,184 @@ static bool32 initialize_game()
 
     game->offscreen = image_view;
 
-    game->time_per_update = (uint64)1'000'000'000 / 75;
+    game->time_per_update = (uint64)1'000'000'000 / 60;
     game->start_time = get_time_tick();
 
-#if IS_SERVER
-    uint16 binded_port = net_bind(0xFFFF);
-#endif
-
-    // Blobby Volley 3
-    game->player_positions[0] = (Vec2){ 200.0f, GROUND_PLANE_HEIGHT };
-    game->player_positions[1] = (Vec2){ 600.0f, GROUND_PLANE_HEIGHT };
-    game->ball_position = (Vec2){ 200.0f, STANDARD_BALL_HEIGHT };
+    game->is_offline = 1;
 
     return 1;
 }
 
-static void handle_blob(Vec2* blob_position, Vec2* blob_velocity,
-                        bool32 key_left, bool32 key_right, bool32 key_up)
-{
-    float32 current_gravitation = GRAVITATION;
-    if (key_up)
-    {
-        if (blob_position->e2 >= GROUND_PLANE_HEIGHT)
-        {
-            blob_velocity->e2 = BLOBBY_JUMP_ACCELERATION;
-        }
-        current_gravitation -= BLOBBY_JUMP_BUFFER;
-    }
-
-    blob_velocity->e1 = (1.0f * key_right - 1.0f * key_left) * BLOBBY_SPEED;
-
-    blob_position->e1 += blob_velocity->e1;
-    blob_position->e2 += 0.5f * current_gravitation + blob_velocity->e2;
-
-    blob_velocity->e2 += current_gravitation;
-
-    if (blob_position->e2 > GROUND_PLANE_HEIGHT)
-    {
-        blob_position->e2 = GROUND_PLANE_HEIGHT;
-        blob_velocity->e2 = 0.0f;
-    }
-}
-
-static bool32 circle_to_circle(Vec2 first_position,  float32 first_radius,
-                               Vec2 second_position, float32 second_radius)
-{
-    Vec2 distance = { 0 };
-    distance.e1 = first_position.e1 - second_position.e1;
-    distance.e2 = first_position.e2 - second_position.e2;
-    float32 radius_sum = first_radius + second_radius;
-    return (distance.e1 * distance.e1 + distance.e2 * distance.e2) < (radius_sum * radius_sum);
-}
-
-static Vec2 normalize(Vec2 vector)
-{
-    float32 length = square_root(vector.e1 * vector.e1 + vector.e2 * vector.e2);
-    return (Vec2){vector.e1 / length, vector.e2 / length};
-}
-
-static float32 length(Vec2 vector)
-{
-    return square_root(vector.e1 * vector.e1 + vector.e2 * vector.e2);
-}
-
-static float32 dot_product(Vec2 first_vector, Vec2 second_vector)
-{
-    return first_vector.e1 * second_vector.e1 + first_vector.e2 * second_vector.e2;
-}
-
-static void handle_blob_ball_collision(Vec2* ball_position, Vec2* ball_velocity,
-                                       Vec2 blob_position, Vec2 blob_velocity)
-{
-    Vec2 collision_center = blob_position;
-
-    // check for impact
-    bool32 isCollide = 0;
-    Vec2 lower_sphere_position = (Vec2){ blob_position.e1, blob_position.e2 + BLOBBY_LOWER_SPHERE };
-    Vec2 upper_sphere_position = (Vec2){ blob_position.e1, blob_position.e2 - BLOBBY_UPPER_SPHERE };
-    if (circle_to_circle(*ball_position, BALL_RADIUS, lower_sphere_position, BLOBBY_LOWER_RADIUS))
-    {
-        collision_center.e2 += BLOBBY_LOWER_SPHERE;
-        isCollide = 1;
-    }
-    else if (circle_to_circle(*ball_position, BALL_RADIUS, upper_sphere_position, BLOBBY_UPPER_RADIUS))
-    {
-        collision_center.e2 -= BLOBBY_UPPER_SPHERE;
-        isCollide = 1;
-    }
-
-    if (isCollide)
-    {
-        // ok, if we get here, there actually was a collision
-
-        // calculate hit intensity
-        Vec2 temp = { 0 };
-        temp.e1 = blob_velocity.e1 - ball_velocity->e1;
-        temp.e2 = blob_velocity.e2 - ball_velocity->e2;
-        float32 intensity = min(1.0f, square_root(temp.e1 * temp.e1 + temp.e2 * temp.e2) / 25.0f);
-
-        // set ball velocity
-        ball_velocity->e1 = -(collision_center.e1 - ball_position->e1);
-        ball_velocity->e2 = -(collision_center.e2 - ball_position->e2);
-        *ball_velocity = normalize(*ball_velocity);
-        ball_velocity->e1 = ball_velocity->e1 * BALL_COLLISION_VELOCITY;
-        ball_velocity->e2 = ball_velocity->e2 * BALL_COLLISION_VELOCITY;
-        ball_position->e1 += ball_velocity->e1;
-        ball_position->e2 += ball_velocity->e2;
-    }
-}
-
-static void render_game()
+static void render_game(State* state)
 {
     Color clear_color = { 0 };
-    clear_color.blue = (uint8)(game->tick / 2 % (256 - 96));
-    clear_color.red = (uint8)(game->tick / 3 % (256 - 64));
-    clear_color.green = (uint8)(game->tick / 4 % (256 - 128));
+    clear_color.red = (uint8)(41);
+    clear_color.green = (uint8)(173);
+    clear_color.blue = (uint8)(255);
     clear(game->offscreen, clear_color);
 
-    Vec2 position;
-    position.e1 = (float32)game->x[0];
-    position.e2 = (float32)game->y[0];
-    draw_circle(255, 0, 255,position.e1, position.e2, 16);
+    draw_rectangle(game->offscreen, (Color){255, 163, 0}, 0, 0, GAME_HORIZONTAL_RESOLUTION, GROUND_HEIGHT);
 
-    position.e1 = (float32)game->x[1];
-    position.e2 = (float32)game->y[1];
-    draw_circle(0, 255, 255, position.e1, position.e2, 8);
+    draw_circle(255, 0, 77, 50, 50, 10);
+    draw_circle(255, 0, 77, 50, 60, 7);
 
-    draw_horizontal_line(255, 255, 255, 0);
-    draw_horizontal_line(255, 255, 255, (float32)game->offscreen.height);
-    draw_vertical_line(255, 255, 255, 0);
-    draw_vertical_line(255, 255, 255, (float32)game->offscreen.width);
+    draw_circle(0, 228, 54, 100, 70, 14);
+    draw_circle(0, 228, 54, 100, 80, 10);
 
-    // Blobby Volley 3
-    draw_circle(0, 255, 0, game->ball_position.e1, game->ball_position.e2, BALL_RADIUS);
     for (int32 i = 0; i < MAX_PLAYERS; i += 1)
     {
-        uint8 red = (uint8)(255 * (1 - i));
-        uint8 blue = (uint8)(255 * i);
-        draw_circle(red, 0, blue, game->player_positions[i].e1, game->player_positions[i].e2 + BLOBBY_LOWER_SPHERE, BLOBBY_LOWER_RADIUS);
-        draw_circle(red, 0, blue, game->player_positions[i].e1, game->player_positions[i].e2 - BLOBBY_UPPER_SPHERE, BLOBBY_UPPER_RADIUS);
-    }
-    draw_horizontal_line(255, 255, 255, GROUND_PLANE_HEIGHT + BLOBBY_HEIGHT / 2);
-    draw_horizontal_line(255, 255, 255, GROUND_PLANE_HEIGHT + BLOBBY_HEIGHT / 1.75f);
-    draw_horizontal_line(255, 255, 255, GROUND_PLANE_HEIGHT + BLOBBY_HEIGHT / 1.5f);
-    draw_horizontal_line(255, 255, 255, GROUND_PLANE_HEIGHT + BLOBBY_HEIGHT / 1.25f);
-    draw_horizontal_line(255, 255, 255, GROUND_PLANE_HEIGHT + BLOBBY_HEIGHT / 1.0f);
-    draw_horizontal_line(255, 255, 255, GROUND_PLANE_HEIGHT + BLOBBY_HEIGHT / 0.75f);
-    draw_horizontal_line(255, 255, 255, GROUND_PLANE_HEIGHT + BLOBBY_HEIGHT / 0.5f);
-    for (float32 y = NET_SPHERE_POSITION; y < 800.0f; y += 10.0f)
-    {
-        draw_circle(255, 255, 255, NET_POSITION_X, y, NET_RADIUS);
+        if (game->is_connected)
+        {
+            Vec2i position = state->player_positions[i];
+            draw_circle(255, 255, 255, (float32)position.e1, (float32)position.e2, 16.0f);
+        }
     }
 
     present_offscreen(game->offscreen);
 }
 
-static float32 fabs(float32 value)
-{
-    if (value < 0.0f)
-    {
-        return -value;
-    }
-    return value;
-}
-
-static void update_game()
+static void update_game(State* state, Tick_input input)
 {
     for (int32 i = 0; i < MAX_PLAYERS; i += 1)
     {
-        Player_input player_input = game->tick_input.player_inputs[i];
-        handle_blob(&game->player_positions[i], &game->player_velocities[i], player_input.is_left, player_input.is_right, player_input.is_up);
-    }
+        Player_input player_input = input.player_inputs[i];
 
-    // Move ball
-    game->ball_position.e1 += game->ball_velocity.e1,
-    game->ball_position.e2 += 0.5f * BALL_GRAVITATION + game->ball_velocity.e2;
-    game->ball_velocity.e2 += BALL_GRAVITATION;
-
-    // Handle ball and blobby collision
-    handle_blob_ball_collision(&game->ball_position, &game->ball_velocity, game->player_positions[0], game->player_velocities[0]);
-    handle_blob_ball_collision(&game->ball_position, &game->ball_velocity, game->player_positions[1], game->player_velocities[1]);
-
-    // Handle ball and world collision
-    {
-        // Ball to roof collision
-        if(game->ball_position.e2 - BALL_RADIUS < 0)
+        if (player_input.is_up)
         {
-            game->ball_velocity = (Vec2){ game->ball_velocity.e1, -game->ball_velocity.e2 };
-            game->ball_velocity.e1 *= 0.95f;
-            game->ball_velocity.e2 *= 0.95f;
-            game->ball_position.e2 = BALL_RADIUS;
+            state->player_positions[i].e2 += 1;
         }
-
-        // Ball to ground Collision
-        if (game->ball_position.e2 + BALL_RADIUS > GROUND_PLANE_HEIGHT_MAX)
+        if (player_input.is_left)
         {
-            game->ball_velocity = (Vec2){ game->ball_velocity.e1, -game->ball_velocity.e2 };
-            game->ball_velocity.e1 *= 0.95f * 0.6f;
-            game->ball_velocity.e2 *= 0.95f * 0.6f;
-            game->ball_position.e2 = GROUND_PLANE_HEIGHT_MAX - BALL_RADIUS;
+            state->player_positions[i].e1 -= 1;
         }
-
-        // Border Collision
-        if ((game->ball_position.e1 - BALL_RADIUS <= LEFT_PLANE) && (game->ball_velocity.e1 < 0.0))
+        if (player_input.is_down)
         {
-            game->ball_velocity = (Vec2){-game->ball_velocity.e1, game->ball_velocity.e2};
-            // set the ball's position
-            game->ball_position.e1 = LEFT_PLANE + BALL_RADIUS;
+            state->player_positions[i].e2 -= 1;
         }
-        else if (game->ball_position.e1 + BALL_RADIUS >= RIGHT_PLANE && game->ball_velocity.e1 > 0.0)
+        if (player_input.is_right)
         {
-            game->ball_velocity = (Vec2){-game->ball_velocity.e1, game->ball_velocity.e2};
-            // set the ball's position
-            game->ball_position.e1 = RIGHT_PLANE - BALL_RADIUS;
-        }
-        else if (game->ball_position.e2 > NET_SPHERE_POSITION && fabs(game->ball_position.e1 - NET_POSITION_X) < BALL_RADIUS + NET_RADIUS)
-        {
-            bool32 right = game->ball_position.e1 - NET_POSITION_X > 0;
-            game->ball_velocity = (Vec2){-game->ball_velocity.e1, game->ball_velocity.e2};
-            // set the ball's position so that it touches the net
-            game->ball_position.e1 = NET_POSITION_X + (right ? (BALL_RADIUS + NET_RADIUS) : (-BALL_RADIUS - NET_RADIUS));
-        }
-        else
-        {
-            // Net Collisions
-            Vec2 temp2 = { 0 };
-            temp2.e1 = NET_POSITION_X - game->ball_position.e1;
-            temp2.e2 = NET_SPHERE_POSITION - game->ball_position.e2;
-            float32 ball_net_distance = length(temp2);
-            if (ball_net_distance < NET_RADIUS + BALL_RADIUS)
-            {
-                // calculate
-                Vec2 temp4 = { 0 };
-                temp4.e1 = NET_POSITION_X - game->ball_position.e1;
-                temp4.e2 = NET_SPHERE_POSITION - game->ball_position.e2;
-                Vec2 normal = normalize(temp4);
-
-                // normal component of kinetic energy
-                float32 perp_ekin = dot_product(normal, game->ball_velocity);
-                perp_ekin *= perp_ekin;
-                // parallel component of kinetic energy
-                float32 para_ekin = 0.0f;
-                para_ekin = (game->ball_velocity.e1 * game->ball_velocity.e1 + game->ball_velocity.e2 * game->ball_velocity.e2) - perp_ekin;
-                // the normal component is damped stronger than the parallel component
-                // the values are ~ 0.85 and ca. 0.95, because speed is sqrt(ekin)
-                perp_ekin *= 0.7f;
-                para_ekin *= 0.9f;
-
-                float32 new_speed = square_root(perp_ekin + para_ekin);
-
-
-                Vec2 reflect = { 0 };
-                reflect.e1 = game->ball_velocity.e1 - (normal.e1 * 2 * dot_product(game->ball_velocity, normal));
-                reflect.e2 = game->ball_velocity.e2 - (normal.e2 * 2 * dot_product(game->ball_velocity, normal));
-                game->ball_velocity.e1 = normalize(reflect).e1 * new_speed;
-                game->ball_velocity.e2 = normalize(reflect).e2 * new_speed;
-
-                // pushes the ball out of the net
-                Vec2 temp3 = { 0 };
-                temp3.e1 = NET_POSITION_X - normal.e1 * (NET_RADIUS + BALL_RADIUS);
-                temp3.e2 = NET_SPHERE_POSITION - normal.e2 * (NET_RADIUS + BALL_RADIUS);
-                game->ball_position = temp3;
-            }
+            state->player_positions[i].e1 += 1;
         }
     }
 
-    // Collision between blobby and the net
-    if (game->player_positions[0].e1 + BLOBBY_LOWER_RADIUS > NET_POSITION_X - NET_RADIUS)
-        game->player_positions[0].e1 = NET_POSITION_X - NET_RADIUS - BLOBBY_LOWER_RADIUS;
-
-    if (game->player_positions[1].e1 - BLOBBY_LOWER_RADIUS < NET_POSITION_X + NET_RADIUS)
-        game->player_positions[1].e1 = NET_POSITION_X + NET_RADIUS + BLOBBY_LOWER_RADIUS;
-
-    // Collision between blobby and the border
-    if (game->player_positions[0].e1 < LEFT_PLANE)
-        game->player_positions[0].e1 = LEFT_PLANE;
-
-    if (game->player_positions[1].e1 > RIGHT_PLANE)
-        game->player_positions[1].e1 = RIGHT_PLANE;
-
-    game->tick += 1;
-    adjust_input();
+    state->tick += 1;
 }
 
-static void server()
+static void server_handle_packet(void* packet)
 {
-    bool32 is_receive = 0;
-    do
+    Packet_header* packet_header = (Packet_header*)packet;
+    switch (packet_header->type)
     {
-        uint32 out_ip = { 0 };
-        uint16 out_port = { 0 };
-        Player_input player_input = { 0 };
-        is_receive = net_receive(&player_input, sizeof(Player_input), &out_ip, &out_port);
-        if (is_receive && out_port != 0xFFFF)
+        case PACKET_CONNECT:
         {
-            for (int32 i = 0; i < MAX_PLAYERS; i += 1)
-            {
-                if (game->ips[i] == out_ip && game->ports[i] == out_port)
-                {
-                    game->tick_input.player_inputs[i] = player_input;
-                    break;
-                }
-
-                if (!game->ips[i] && !game->ports[i])
-                {
-                    console_write(STRING_LITERAL("New player connected!\n"));
-                    game->ips[i] = out_ip;
-                    game->ports[i] = out_port;
-                    game->tick_input.player_inputs[i] = player_input;
-                    break;
-                }
-            }
+            break;
         }
-    } while (is_receive);
-
-    bool32 is_all_players_connected = 1;
-    for (int32 i = 0; i < MAX_PLAYERS; i += 1)
-    {
-        if (!game->ips[i])
+        case PACKET_DISCONNECT:
         {
-            is_all_players_connected = 0;
+            break;
+        }
+        case PACKET_PING:
+        {
+            break;
+        }
+        case PACKET_PLAYER_INPUT:
+        {
+            break;
+        }
+        case PACKET_TICK_INPUT:
+        {
+            break;
+        }
+        default:
+        {
+            break;
         }
     }
+}
 
-    if (is_all_players_connected)
+static void client_handle_packet(void* packet)
+{
+    Packet_header* packet_header = (Packet_header*)packet;
+    switch (packet_header->type)
     {
-        game->tick_input.tick = game->tick;
-        for (int32 i = 0; i < MAX_PLAYERS; i += 1)
+        int64 size = sizeof(packet_header);
+        packet = (uint8*)packet + sizeof(packet_header);
+        case PACKET_TICK_INPUT:
         {
-            if (game->ips[i])
-            {
-                net_send((void*)&game->tick_input, sizeof(Tick_input), game->ips[i], game->ports[i]);
-            }
-        }
+            Packet_input* packet_input = (Packet_input*)packet;
 
-        update_game();
+
+
+            break;
+        }
+        case PACKET_GAME_STATE:
+        {
+            Packet_game_state* packet_game_state = (Packet_game_state*)packet;
+
+            break;
+        }
+        default:
+        {
+            break;
+        }
     }
 }
 
 static void client()
 {
+    console_write(STRING_LITERAL("\nClinet\n"));
+
+    char8 buffer[256] = { 0 };
+    String string = { 0 };
+    string.data = buffer;
+
     uint32 out_ip = { 0 };
     uint16 out_port = { 0 };
     Tick_input tick_input = { 0 };
-    bool32 is_receive = net_receive(&tick_input, sizeof(Tick_input), &out_ip, &out_port);
+    console_write(STRING_LITERAL("\nGetting Tick_input from the server\n"));
+    while (net_receive(&tick_input, sizeof(Tick_input), &out_ip, &out_port) > 0)
+    {
+        console_write(STRING_LITERAL("Got new Tick_input for "));
+        string.length = uint32_to_string(buffer, 256, (uint32)tick_input.tick);
+        console_write(string);
+        console_write(STRING_LITERAL(" tick\n"));
+        for (int32 i = 0; i < MAX_TICK_INPUT_BUFFER; i += 1)
+        {
+            if (!game->has_tick_input[i])
+            {
+                game->tick_inputs[i] = tick_input;
+                game->has_tick_input[i] = 1;
+                break;
+            }
+        }
+    }
+
+    console_write(STRING_LITERAL("Starting processing tick inputs\n"));
+    bool32 has_tick_input = 1;
+    while (has_tick_input)
+    {
+        has_tick_input = 0;
+        for (int32 i = 0; i < MAX_TICK_INPUT_BUFFER; i += 1)
+        {
+            if (game->has_tick_input[i])
+            {
+                if (game->tick_inputs[i].tick == game->client_state.tick)
+                {
+                    Tick_input tick_input = game->tick_inputs[i];
+                    console_write(STRING_LITERAL("Process tick input for "));
+                    string.length = uint32_to_string(buffer, 256, (uint32)tick_input.tick);
+                    console_write(STRING_LITERAL(" tick\n"));
+
+                    update_game(&game->client_state, tick_input);
+                    render_game(&game->client_state);
+
+                    game->has_tick_input[i] = 0;
+                }
+                has_tick_input = 1;
+            }
+        }
+    }
+
 
     Player_input player_input = { 0 };
     if (is_button_down(KEY_W))
@@ -390,40 +224,146 @@ static void client()
         player_input.is_right = 1;
     }
 
-    net_send((void*)&player_input, sizeof(Player_input), 0x7f000001, 0xFFFF);
+    net_send(&player_input, sizeof(Player_input), 0x7f000001, 0xFFFF);
 
-    if (is_receive)
+    adjust_input();
+}
+
+static void server()
+{
+    console_write(STRING_LITERAL("\nServer\n"));
+    char8 buffer[256] = { 0 };
+    String string = { 0 };
+    string.data = buffer;
+
+    console_write(STRING_LITERAL("Getting input from players\n"));
+    int32 is_receive = 0;
+    do
     {
-        game->tick_input = tick_input;
-        update_game();
+        uint32 out_ip = { 0 };
+        uint16 out_port = { 0 };
+        Player_input player_input = { 0 };
+        is_receive = net_receive(&player_input, sizeof(Player_input), &out_ip, &out_port);
+        if (is_receive > 0)
+        {
+            for (int32 i = 0; i < MAX_PLAYERS; i += 1)
+            {
+                if (game->ips[i] == out_ip && game->ports[i] == out_port)
+                {
+                    console_write(STRING_LITERAL("Got player input from "));
+                    string.length = uint32_to_string(buffer, 256, out_ip);
+                    console_write(string);
+                    console_write(STRING_LITERAL(" ip and "));
+                    string.length = uint32_to_string(buffer, 256, out_port);
+                    console_write(string);
+                    console_write(STRING_LITERAL(" port\n"));
+
+                    game->tick_input.player_inputs[i] = player_input;
+
+                    break;
+                }
+
+                if (!game->ips[i] && !game->ports[i])
+                {
+                    console_write(STRING_LITERAL("New player with "));
+                    string.length = uint32_to_string(buffer, 256, out_ip);
+                    console_write(string);
+                    console_write(STRING_LITERAL(" ip and "));
+                    string.length = uint32_to_string(buffer, 256, out_port);
+                    console_write(string);
+                    console_write(STRING_LITERAL(" port connected\n"));
+                    game->ips[i] = out_ip;
+                    game->ports[i] = out_port;
+                    game->is_connected[i] = 1;
+
+                    game->tick_input.player_inputs[i] = player_input;
+
+                    break;
+                }
+            }
+        }
+    } while (is_receive > 0);
+
+    game->current_time = get_time_tick() - game->start_time;
+    uint64 delta_time = game->current_time - game->previous_time;
+    if (delta_time > game->time_per_update)
+    {
+        delta_time = game->time_per_update;
     }
+
+    game->previous_time = game->current_time;
+    game->accumulator += delta_time;
+    if (game->accumulator >= game->time_per_update)
+    {
+        console_write(STRING_LITERAL("\nTick: "));
+        string.length = uint32_to_string(buffer, 256, (uint32)game->server_state.tick);
+        console_write(string);
+        console_write(STRING_LITERAL("\n"));
+        console_write(STRING_LITERAL("Sending Tick_input to all connected players:\n"));
+        game->tick_input.tick = game->server_state.tick;
+        for (int32 i = 0; i < MAX_PLAYERS; i += 1)
+        {
+            if (game->is_connected[i])
+            {
+                net_send(&game->tick_input, sizeof(Tick_input), game->ips[i], game->ports[i]);
+
+                console_write(STRING_LITERAL("Send Tick_input to "));
+                string.length = uint32_to_string(buffer, 256, game->ips[i]);
+                console_write(string);
+                console_write(STRING_LITERAL(" ip and "));
+                string.length = uint32_to_string(buffer, 256, game->ports[i]);
+                console_write(string);
+                console_write(STRING_LITERAL("port\n"));
+            }
+        }
+
+        console_write(STRING_LITERAL("Server game state update started\n"));
+        update_game(&game->server_state, game->tick_input);
+
+        game->accumulator -= game->time_per_update;
+    }
+
+
 }
 
 static void game_loop()
 {
-    game->current_time = get_time_tick() - game->start_time;
-    uint64 delta_time = game->current_time - game->previous_time;
-    game->previous_time = game->current_time;
-    game->accumulator += delta_time;
-    while (game->accumulator >= game->time_per_update)
+    if (is_button_pressed(KEY_F1))
     {
-        if (game->accumulator > 1'000'000'000)
+        if (game->is_offline)
         {
-            game->accumulator = game->time_per_update;
+            game->is_client = 1;
+            game->is_offline = 0;
         }
-
-#if IS_SERVER
-        server();
-#else
-        client();
-#endif
-
-        game->accumulator -= game->time_per_update;
-        if (game->accumulator < game->time_per_update)
+    }
+    if (is_button_pressed(KEY_F2))
+    {
+        if (game->is_offline)
         {
-            render_game();
+            game->is_server = 1;
+            game->is_offline = 0;
+            uint16 binded_port = net_bind(0xFFFF);
+        }
+    }
+    if (is_button_pressed(KEY_F3))
+    {
+        if (game->is_offline)
+        {
+            game->is_server = 1;
+            game->is_client = 1;
+            game->is_offline = 0;
+            uint16 binded_port = net_bind(0xFFFF);
         }
     }
 
-    sleep(1000);
+    if (game->is_server)
+    {
+        server();
+    }
+    if (game->is_client)
+    {
+        client();
+    }
+
+    sleep(1'000);
 }

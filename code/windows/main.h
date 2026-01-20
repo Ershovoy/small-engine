@@ -2,8 +2,8 @@ static HINSTANCE instance = { 0 };
 static HWND window = { 0 };
 static HDC device_context = { 0 };
 
-static int32 client_width = GAME_HORIZONTAL_RESOLUTION;
-static int32 client_height = GAME_VERTICAL_RESOLUTION;
+static int32 client_width = GAME_HORIZONTAL_RESOLUTION * ((640 + GAME_HORIZONTAL_RESOLUTION - 1) / GAME_HORIZONTAL_RESOLUTION);
+static int32 client_height = GAME_VERTICAL_RESOLUTION * ((640 + GAME_HORIZONTAL_RESOLUTION - 1) / GAME_HORIZONTAL_RESOLUTION);
 
 static bool32 is_running = { 0 };
 

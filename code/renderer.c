@@ -35,16 +35,19 @@ static void draw_pixel(Image_view image_view, Color color, Vec2 position)
 
 // }
 
-// static void draw_rectangle(Image image, Color color, int32 left, int32 bottom, int32 right, int32 top)
-// {
-//     for (int32 y = bottom; y < top; y += 1)
-//     {
-//         for (int32 x = left; x < right; x += 1)
-//         {
-//             draw_pixel(image, color, x, y);
-//         }
-//     }
-// }
+static void draw_rectangle(Image_view image_view, Color color, int32 left, int32 bottom, int32 right, int32 top)
+{
+    for (int32 y = bottom; y < top; y += 1)
+    {
+        for (int32 x = left; x < right; x += 1)
+        {
+            if (x >= 0 && y >= 0 && x < image_view.width && y < image_view.height)
+            {
+                image_view.image.memory[y * image_view.width + x] = *(uint32*)&color;
+            }
+        }
+    }
+}
 
 // static void draw_line(Image image,  Color color, int32 x1, int32 y1, int32 x2, int32 y2)
 // {

@@ -133,14 +133,14 @@ static uint64 get_time_tick_implementation()
 }
 
 
-static void console_write_implementation(char8* buffer, int64 length)
+static void console_write_implementation(char8* string, int64 length)
 {
     HANDLE output_console_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-    char8_to_char16(buffer, length, (char16*)scratch_buffer);
+    char8_to_char16(string, length, (char16*)scratch_buffer);
     WriteConsoleW(output_console_handle, (char16*)scratch_buffer, (DWORD)length, 0, 0);
 }
 
-static bool32 console_read_implementation(char8* string, int64* length)
+static int32 console_read_implementation(char8* buffer, int64 length)
 {
 
 }
@@ -171,7 +171,7 @@ static uint16 net_bind_implementation(uint16 port)
     return binded_port;
 }
 
-static bool32 net_send_implementation(void* data, uint64 size, uint32 ip, uint16 port)
+static int32 net_send_implementation(void* data, uint64 size, uint32 ip, uint16 port)
 {
     SOCKADDR_IN server_address = { 0 };
     server_address.sin_family = AF_INET;
@@ -181,18 +181,10 @@ static bool32 net_send_implementation(void* data, uint64 size, uint32 ip, uint16
     int32 bytes_send = sendto(sock, (char*)data, (int32)size, 0,
                               (SOCKADDR*)&server_address, sizeof(server_address));
 
-    if (bytes_send == SOCKET_ERROR)
-    {
-        return 0;
-    }
-
-    // Опционально: можно проверить, что отправлено ровно size байт
-    // if (bytes_sent != (int32)size) return 0;
-
-    return bytes_send == (int32)size;
+    return bytes_send;
 }
 
-static bool32 net_receive_implementation(void* buffer, uint64 size, uint32* out_ip, uint16* out_port)
+static int32 net_receive_implementation(void* buffer, uint64 size, uint32* out_ip, uint16* out_port)
 {
     SOCKADDR_IN from;
     int32 from_size = sizeof(from);
@@ -200,28 +192,17 @@ static bool32 net_receive_implementation(void* buffer, uint64 size, uint32* out_
     int32 bytes_received = recvfrom(sock, (char*)buffer, (int32)size, 0,
                                     (SOCKADDR*)&from, &from_size);
 
-    if (bytes_received < 0)
-    {
-        int32 error = WSAGetLastError();
-        if (error == WSAEWOULDBLOCK)
-        {
-            return 0;  // нет данных (non-blocking режим)
-        }
-        // Другие ошибки — тоже считаем неудачей
-        return 0;
-    }
-
-    // Если данные успешно получены — заполняем выходные параметры
     if (out_ip)
     {
-        *out_ip = ntohl(from.sin_addr.S_un.S_addr);  // переводим в host byte order
+        *out_ip = ntohl(from.sin_addr.S_un.S_addr);
     }
+
     if (out_port)
     {
         *out_port = ntohs(from.sin_port);
     }
 
-    return 1;
+    return bytes_received;
 }
 
 static void present_offscreen_implementation(void* memory, int32 width, int32 height)

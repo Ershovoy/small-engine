@@ -1,9 +1,19 @@
-static void revert_string(char8* buffer, int32 length) // или size?
+static void revert_string(char8* buffer, int32 length)
 {
+    int32 start = 0;
+    int32 end = length - 1;
+    while (start < end)
+    {
+        char8 temporary = buffer[start];
+        buffer[start] = buffer[end];
+        buffer[end] = temporary;
 
+        start += 1;
+        end -= 1;
+    }
 }
 
-static void uint32_to_string(char8* buffer, int32 size, uint32 value)
+static int32 uint32_to_string(char8* buffer, int32 size, uint32 value)
 {
     int32 index = 0;
 
@@ -16,20 +26,12 @@ static void uint32_to_string(char8* buffer, int32 size, uint32 value)
 
     buffer[index] = '\0';
 
-    int32 start = 0;
-    int32 end = index - 1;
-    while (start < end)
-    {
-        char8 temporary = buffer[start];
-        buffer[start] = buffer[end];
-        buffer[end] = temporary;
+    revert_string(buffer, index);
 
-        start += 1;
-        end -= 1;
-    }
+    return index;
 }
 
-static void int32_to_string(char8* buffer, int32 size, int32 value)
+static int32 int32_to_string(char8* buffer, int32 size, int32 value)
 {
     int32 index = 0;
 
@@ -40,5 +42,7 @@ static void int32_to_string(char8* buffer, int32 size, int32 value)
         index += 1;
     }
 
-    uint32_to_string(buffer + index, size - index, value);
+    index += uint32_to_string(buffer + index, size - index, value);
+
+    return index;
 }

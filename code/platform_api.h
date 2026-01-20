@@ -15,8 +15,8 @@ typedef void console_read_function();
 typedef void console_write_function(char8* buffer, int64 length);
 
 typedef uint16 net_bind_function(uint16 port);
-typedef bool32 net_send_function(void* data, uint64 size, uint32 ip, uint16 port);
-typedef bool32 net_receive_function(void* buffer, uint64 size, uint32* ip, uint16* port);
+typedef int32 net_send_function(void* data, uint64 size, uint32 ip, uint16 port);
+typedef int32 net_receive_function(void* buffer, uint64 size, uint32* ip, uint16* port);
 
 typedef void play_sound_function(void* memory, uint32 size, int32 sample_rate, int32 bits_per_sample, int32 number_of_channels);
 
