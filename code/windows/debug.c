@@ -29,6 +29,7 @@ void load_game_dll()
         reset_input_function_pointer = (reset_input_function*)GetProcAddress(game_dll, "reset_input_dll");
         initialize_game = (initialize_game_function*)GetProcAddress(game_dll, "initialize_game_dll");
         game_loop = (game_loop_function*)GetProcAddress(game_dll, "game_loop_dll");
+        deinitialize_game = (deinitialize_game_function*)GetProcAddress(game_dll, "deinitialize_game_dll");
 
         Platform_api** platform_api_dll = (Platform_api**)GetProcAddress(game_dll, "platform_api_dll");
         **platform_api_dll = platform_api;

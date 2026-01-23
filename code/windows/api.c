@@ -7,11 +7,11 @@ static void char8_to_char16(char8* source, int64 length, char16* destination)
     destination[length] = 0;
 }
 
-static uint32 get_file_size_implementation(char8* file_name)
+static int64 get_file_size_implementation(char8* file_name, int64 file_name_length)
 {
-    uint32 result = 0;
+    int64 result = 0;
 
-    char8_to_char16(file_name, lengthof(file_name), (char16*)scratch_buffer);
+    char8_to_char16(file_name, file_name_length, (char16*)scratch_buffer);
     HANDLE file_handle = CreateFileW((char16*)scratch_buffer, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
     if (file_handle != INVALID_HANDLE_VALUE)
     {
@@ -27,11 +27,11 @@ static uint32 get_file_size_implementation(char8* file_name)
     return result;
 }
 
-static bool32 read_file_implementation(char8* file_name, void* memory)
+static bool32 read_file_implementation(char8* file_name, int64 file_name_length, void* memory)
 {
     bool32 result = 0;
 
-    char8_to_char16(file_name, lengthof(file_name), (char16*)scratch_buffer);
+    char8_to_char16(file_name, file_name_length, (char16*)scratch_buffer);
     HANDLE file_handle = CreateFileW((char16*)scratch_buffer, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
     if (file_handle != INVALID_HANDLE_VALUE)
     {
@@ -56,11 +56,11 @@ static bool32 read_file_implementation(char8* file_name, void* memory)
     return result;
 }
 
-static bool32 write_file_implementation(char8* file_name, void* data, uint64 size)
+static bool32 write_file_implementation(char8* file_name, int64 file_name_length, void* data, int64 size)
 {
     bool32 result = 0;
 
-    char8_to_char16(file_name, lengthof(file_name), (char16*)scratch_buffer);
+    char8_to_char16(file_name, file_name_length, (char16*)scratch_buffer);
     HANDLE file_handle = CreateFileW((char16*)scratch_buffer, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
     if (file_handle != INVALID_HANDLE_VALUE)
     {
@@ -81,23 +81,23 @@ static bool32 write_file_implementation(char8* file_name, void* data, uint64 siz
     return result;
 }
 
-static void* reserve_memory_implementation(uint64 size)
+static void* reserve_memory_implementation(int64 size)
 {
     return VirtualAlloc(0, size, MEM_RESERVE, PAGE_NOACCESS);
 }
 
-static void* commit_memory_implementation(void* memory, uint64 size)
+static void* commit_memory_implementation(void* memory, int64 size)
 {
     return VirtualAlloc(memory, size, MEM_COMMIT, PAGE_READWRITE);
 }
 
-static void* allocate_memory_implementation(uint64 size)
+static void* allocate_memory_implementation(int64 size)
 {
     return VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 }
 
 // TODO: Can decommit only the end of memory block
-static void decommit_memory_implementation(void* memory, uint64 size)
+static void decommit_memory_implementation(void* memory, int64 size)
 {
     VirtualFree(memory, 0, MEM_DECOMMIT);
 }
@@ -118,7 +118,7 @@ static void sleep_implementation(int32 nanoseconds)
     }
 }
 
-static uint64 get_time_tick_implementation()
+static int64 get_time_tick_implementation()
 {
     int64 perfomance_counter_frequency;
     int64 current_counter;
@@ -171,25 +171,30 @@ static uint16 net_bind_implementation(uint16 port)
     return binded_port;
 }
 
-static int32 net_send_implementation(void* data, uint64 size, uint32 ip, uint16 port)
+static int64 net_send_implementation(void* data, int64 size, uint32 ip, uint16 port)
 {
     SOCKADDR_IN server_address = { 0 };
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(port);
     server_address.sin_addr.S_un.S_addr = htonl(ip);
 
-    int32 bytes_send = sendto(sock, (char*)data, (int32)size, 0,
+    int64 bytes_send = sendto(sock, (char*)data, (int32)size, 0,
                               (SOCKADDR*)&server_address, sizeof(server_address));
+
+    if (bytes_send < 0)
+    {
+        bytes_send = 0;
+    }
 
     return bytes_send;
 }
 
-static int32 net_receive_implementation(void* buffer, uint64 size, uint32* out_ip, uint16* out_port)
+static int64 net_receive_implementation(void* buffer, int64 size, uint32* out_ip, uint16* out_port)
 {
     SOCKADDR_IN from;
     int32 from_size = sizeof(from);
 
-    int32 bytes_received = recvfrom(sock, (char*)buffer, (int32)size, 0,
+    int64 bytes_received = recvfrom(sock, (char*)buffer, (int32)size, 0,
                                     (SOCKADDR*)&from, &from_size);
 
     if (out_ip)
@@ -200,6 +205,11 @@ static int32 net_receive_implementation(void* buffer, uint64 size, uint32* out_i
     if (out_port)
     {
         *out_port = ntohs(from.sin_port);
+    }
+
+    if (bytes_received < 0)
+    {
+        bytes_received = 0;
     }
 
     return bytes_received;

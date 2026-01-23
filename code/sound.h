@@ -1,8 +1,8 @@
 typedef struct
 {
-    bool32 is_initialized;
     void* memory;
-    uint32 size;
+    int64 size;
+    bool32 is_initialized;
     int32 sample_rate;
     int32 bits_per_sample;
     int32 number_of_channels;

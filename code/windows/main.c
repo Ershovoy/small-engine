@@ -323,6 +323,8 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
         game_loop();
     }
 
+    deinitialize_game();
+
 #ifndef INTERNAL
     deinitialize_debug();
 #endif
@@ -344,8 +346,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (!instance)
         ExitProcess(1);
 
-    if (!AllocConsole())
-        ExitProcess(1);
+    // if (!AllocConsole())
+    //     ExitProcess(1);
 
     if (!initialize_xaudio2())
         ExitProcess(1);

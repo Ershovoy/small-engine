@@ -6,15 +6,10 @@
 #include "platform_api.h"
 #include "arena.h"
 #include "string.h"
-#include "state.h"
+#include "game_state.h"
+#include "game_render.h"
 #include "network.h"
 #include "sound.h"
-
-#define MAX_PLAYERS 8
-#define MAX_TICK_INPUT_BUFFER 256
-
-#define BALL_RADIUS 10
-#define GROUND_HEIGHT 10
 
 typedef struct
 {
@@ -26,8 +21,8 @@ typedef struct
     uint64 previous_time;
     uint64 current_time;
 
-    State client_state;
-    State server_state;
+    Game_state client_state;
+    Game_state server_state;
 
     uint32 ips[MAX_PLAYERS];
     uint16 ports[MAX_PLAYERS];
@@ -38,8 +33,6 @@ typedef struct
     bool32 is_offline;
 
     Tick_input tick_input;
-    Tick_input tick_inputs[MAX_TICK_INPUT_BUFFER];
-    bool32 has_tick_input[MAX_TICK_INPUT_BUFFER];
 } Game;
 
 static Game* game = { 0 };

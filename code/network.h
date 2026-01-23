@@ -1,5 +1,6 @@
 typedef enum
 {
+    PACKET_EMPTY,
     PACKET_CONNECT,
     PACKET_DISCONNECT,
     PACKET_PING,
@@ -17,20 +18,36 @@ typedef struct
 
 typedef struct
 {
+    Packet_header header;
     uint8 padding[8];
 } Packet_connect;
 
 typedef struct
 {
+    Packet_header header;
     uint8 padding[8];
 } Packet_disconnect;
 
 typedef struct
 {
-    Player_input player_input;
-} Packet_input;
+    Packet_header header;
+    uint8 padding[8];
+} Packet_ping;
 
 typedef struct
 {
-    State state;
+    Packet_header header;
+    Player_input player_input;
+} Packet_player_input;
+
+typedef struct
+{
+    Packet_header header;
+    Tick_input tick_input;
+} Packet_tick_input;
+
+typedef struct
+{
+    Packet_header header;
+    Game_state game_state;
 } Packet_game_state;

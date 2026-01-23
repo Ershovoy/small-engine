@@ -37,6 +37,11 @@ __declspec(dllexport) void game_loop_dll()
     game_loop();
 }
 
+__declspec(dllexport) void deinitialize_game_dll()
+{
+    deinitialize_game();
+}
+
 #ifdef NO_C_RUNTIME
 BOOL WINAPI DllMainCRTStartup(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {

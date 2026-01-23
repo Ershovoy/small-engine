@@ -5,6 +5,25 @@
 
 typedef struct
 {
+    uint16 file_type;
+    uint32 file_size;
+    uint16 reserved[2];
+    uint32 bitmap_offset;
+    uint32 header_size;
+    int32 bitmap_width;
+    int32 bitmap_height;
+    uint16 planes;
+    uint16 bits_per_pixel;
+    uint32 compression;
+    uint32 bitmap_size;
+    int32 horizontal_resolution;
+    int32 vertical_resolutiion;
+    uint32 color_number;
+    uint32 important_color_number;
+} Bitmap_header;
+
+typedef struct
+{
     uint8 red;
     uint8 green;
     uint8 blue;
@@ -13,9 +32,10 @@ typedef struct
 
 typedef struct
 {
+    uint32* memory;
+    int64 size;
     int32 width;
     int32 height;
-    uint32* memory;
 } Image;
 
 typedef struct

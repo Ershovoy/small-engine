@@ -3,37 +3,37 @@ static void sleep(int32 nanoseconds)
     platform_api.sleep(nanoseconds);
 }
 
-static uint64 get_time_tick()
+static int64 get_time_tick()
 {
     return platform_api.get_time_tick();
 }
 
-static uint32 get_file_size(char8* file_name)
+static int64 get_file_size(char8* file_name, int64 file_name_length)
 {
-    return platform_api.get_file_size(file_name);
+    return platform_api.get_file_size(file_name, file_name_length);
 }
 
-static bool32 read_file(char8* file_name, void* memory)
+static bool32 read_file(char8* file_name, int64 file_name_length, void* memory)
 {
-    return platform_api.read_file(file_name, memory);
+    return platform_api.read_file(file_name, file_name_length, memory);
 }
 
-static bool32 write_file(char8* file_name, void* data, uint64 size)
+static bool32 write_file(char8* file_name, int64 file_name_length, void* data, int64 size)
 {
-    return platform_api.write_file(file_name, data, size);
+    return platform_api.write_file(file_name, file_name_length, data, size);
 }
 
-static void* reserve_memory(uint64 size)
+static void* reserve_memory(int64 size)
 {
     return platform_api.reserve_memory(size);
 }
 
-static void* commit_memory(void* memory, uint64 size)
+static void* commit_memory(void* memory, int64 size)
 {
     return platform_api.commit_memory(memory, size);
 }
 
-static void decommit_memory(void* memory, uint64 size)
+static void decommit_memory(void* memory, int64 size)
 {
     platform_api.decommit_memory(memory, size);
 }
@@ -53,12 +53,12 @@ static uint16 net_bind(uint16 port)
     return platform_api.net_bind(port);
 }
 
-static int32 net_send(void* data, uint64 size, uint32 ip, uint16 port)
+static int64 net_send(void* data, int64 size, uint32 ip, uint16 port)
 {
     return platform_api.net_send(data, size, ip, port);
 }
 
-static int32 net_receive(void* buffer, uint64 size, uint32* out_ip, uint16* out_port)
+static int64 net_receive(void* buffer, int64 size, uint32* out_ip, uint16* out_port)
 {
     return platform_api.net_receive(buffer, size, out_ip, out_port);
 }

@@ -1,3 +1,5 @@
+#define MAX_PLAYERS 8
+
 typedef struct
 {
     bool32 is_right;
@@ -20,4 +22,4 @@ typedef struct
     Vec2i ball_velocity;
 
     uint64 tick;
-} State;
+} Game_state;

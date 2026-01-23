@@ -26,7 +26,7 @@ static bool32 initialize_xaudio2()
     return 1;
 }
 
-static void xaudio2_play_sound(void* memory, uint32 size, int32 sample_rate, int32 bits_per_sample, int32 number_of_channels)
+static void xaudio2_play_sound(void* memory, int64 size, int32 sample_rate, int32 bits_per_sample, int32 number_of_channels)
 {
     int32 bytes_per_block = (number_of_channels * bits_per_sample) / 8;
     WAVEFORMATEX wave_format =
@@ -50,7 +50,7 @@ static void xaudio2_play_sound(void* memory, uint32 size, int32 sample_rate, int
                 break;
 
             XAUDIO2_BUFFER buffer = { 0 };
-            buffer.AudioBytes = size;
+            buffer.AudioBytes = (int32)size;
             buffer.pAudioData = memory;
             buffer.Flags = XAUDIO2_END_OF_STREAM;
             buffer.LoopCount = 0;

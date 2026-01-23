@@ -48,6 +48,8 @@ SET debug_linker_flags=%no_c_runtime_debug_linker_flag% /incremental:no /opt:ref
 
 IF %internal%==1 (
     CL %compiler_macros% %compiler_flags% ..\code\windows\main.c /link %linker_flags% /OUT:main.exe
+    CL %compiler_macros% %compiler_flags% ..\code\windows\main.c /link %linker_flags% /OUT:main2.exe
+    CL %compiler_macros% %compiler_flags% ..\code\windows\main.c /link %linker_flags% /OUT:main3.exe
 ) ELSE (
     CL %compiler_macros% %compiler_flags% /LD ..\code\windows\game_dll.c /link %debug_linker_flags% /PDB:game_%random%.pdb /OUT:game.dll
     ECHO(
