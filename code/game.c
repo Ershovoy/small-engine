@@ -32,7 +32,7 @@ static bool32 initialize_game()
     game->time_per_update = (int64)1'000'000'000 / 60;
     game->start_time = get_time_tick();
 
-    game->time_per_frame = (int64)1'000'000'000 / 60;
+    game->time_per_frame = (int64)1'000'000'000 / 240;
 
     char8 file_name[] = "sample.wav";
     int64 file_size = get_file_size(file_name, lengthof(file_name));
@@ -91,27 +91,43 @@ static void game_loop()
         delta_time = game->time_per_update;
     }
 
-    game->previous_time = game->current_time;
-    game->accumulator += delta_time;
-    if (game->accumulator >= game->time_per_update)
+    game->update_accumulator += delta_time;
+    if (game->update_accumulator >= game->time_per_update)
     {
         Player_input input = update_game();
 
         game->previous_state = game->state;
         game->previous_input = input;
 
-        render_game_state(&game->state);
-        update_game_state(&game->state, input, (float32)game->time_per_update / 1'000'000'000.0f);
+        update_game_state(&game->state, input, game->time_per_update / 1'000'000'000.0f);
 
         adjust_input();
 
-        game->accumulator -= game->time_per_update;
-    }
-    else
-    {
-        update_game_state(&game->previous_state, game->previous_input, (float32)delta_time / 1'000'000'000.0f);
-        render_game_state(&game->previous_state);
+        game->previous_frame_time = game->current_time;
+        game->update_accumulator -= game->time_per_update;
     }
 
-    //sleep(1'000);
+    if (delta_time > game->time_per_frame)
+    {
+        delta_time = game->time_per_frame;
+    }
+
+    game->frame_accumulator += delta_time;
+    if (game->frame_accumulator >= game->time_per_frame)
+    {
+        update_game_state(&game->previous_state, game->previous_input, (game->current_time - game->previous_frame_time) / 1'000'000'000.0f);
+        render_game_state(&game->previous_state);
+
+        game->previous_frame_time = game->current_time;
+        game->frame_accumulator -= game->time_per_frame;
+    }
+
+    if (game->frame_accumulator < game->time_per_frame / 4 &&
+        game->update_accumulator < game->time_per_update / 4)
+    {
+        // Need to know how long each tick and frame takes
+        // sleep(1'000);
+    }
+
+    game->previous_time = game->current_time;
 }

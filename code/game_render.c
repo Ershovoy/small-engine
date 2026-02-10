@@ -25,5 +25,14 @@ static void render_game_state(Game_state* state)
 
     draw_circle(255, 255, 255, state->mouse_position.e1, state->mouse_position.e2, 6.0f);
 
+    for (int32 i = 0; i < 5; i += 1)
+    {
+        draw_circle(255, 255, 255, (float32)(i * 10 + i * 10 + 10), 16.0f, (float32)i);
+    }
+    for (int32 i = 0; i < 5; i += 1)
+    {
+        draw_circle(255, 255, 255, (float32)(i * 10 + i * 10 + 10), 48.0f, (float32)i + 5);
+    }
+
     present_offscreen(game->offscreen);
 }

@@ -16,13 +16,14 @@ typedef struct
     Image_view offscreen;
 
     int64 start_time;
-    int64 time_per_update;
-    int64 accumulator;
-    int64 previous_time;
     int64 current_time;
-
+    int64 previous_time;
+    int64 time_per_update;
+    int64 update_accumulator;
+    int64 previous_update_time;
     int64 time_per_frame;
-    int64 accumulator2;
+    int64 frame_accumulator;
+    int64 previous_frame_time;
 
     Game_state state;
     Game_state previous_state;
