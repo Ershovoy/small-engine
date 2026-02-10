@@ -22,6 +22,11 @@ __declspec(dllexport) void process_button_dll(Button button, bool32 is_down)
     process_button(button, is_down);
 }
 
+__declspec(dllexport) void process_mouse_dll(int32 x, int32 y, int32 width, int32 height)
+{
+    process_mouse(x, y, width, height);
+}
+
 __declspec(dllexport) void reset_input_dll()
 {
     reset_input();

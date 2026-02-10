@@ -26,6 +26,7 @@ void load_game_dll()
     if (game_dll)
     {
         process_button = (process_button_function*)GetProcAddress(game_dll, "process_button_dll");
+        process_mouse = (process_mouse_function*)GetProcAddress(game_dll, "process_mouse_dll");
         reset_input_function_pointer = (reset_input_function*)GetProcAddress(game_dll, "reset_input_dll");
         initialize_game = (initialize_game_function*)GetProcAddress(game_dll, "initialize_game_dll");
         game_loop = (game_loop_function*)GetProcAddress(game_dll, "game_loop_dll");

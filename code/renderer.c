@@ -19,14 +19,14 @@ static void clear(Image_view image_view, Color color)
     }
 }
 
-static void draw_pixel(Image_view image_view, Color color, Vec2 position)
+static void draw_pixel(uint8 red, uint8 green, uint8 blue, float32 position_x, float32 position_y)
 {
-    int32 x = round_float32_to_int32(position.e1);
-    int32 y = round_float32_to_int32(position.e2);
+    int32 x = round_float32_to_int32(position_x);
+    int32 y = round_float32_to_int32(position_y);
 
-    if (x >= 0 && y >= 0 && x < image_view.width && y < image_view.height)
+    if (x >= 0 && y >= 0 && x < game->offscreen.image.width && y < game->offscreen.image.height)
     {
-        image_view.image.memory[y * image_view.width + x] = *(uint32*)&color;
+        game->offscreen.image.memory[y * game->offscreen.width + x] = (uint32)(red | green << 8 | blue << 16);
     }
 }
 
@@ -35,15 +35,15 @@ static void draw_pixel(Image_view image_view, Color color, Vec2 position)
 
 // }
 
-static void draw_rectangle(Image_view image_view, Color color, int32 left, int32 bottom, int32 right, int32 top)
+static void draw_rectangle(uint8 red, uint8 green, uint8 blue, int32 left, int32 bottom, int32 right, int32 top)
 {
     for (int32 y = bottom; y < top; y += 1)
     {
         for (int32 x = left; x < right; x += 1)
         {
-            if (x >= 0 && y >= 0 && x < image_view.width && y < image_view.height)
+            if (x >= 0 && y >= 0 && x < game->offscreen.width && y < game->offscreen.height)
             {
-                image_view.image.memory[y * image_view.width + x] = *(uint32*)&color;
+                game->offscreen.image.memory[y * game->offscreen.width + x] = (uint32)(red | green << 8 | blue << 16);
             }
         }
     }

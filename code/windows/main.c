@@ -113,19 +113,26 @@ LRESULT CALLBACK window_procedure(HWND   window,
 
             int32 scale = 0;
             if (scale_x < scale_y)
+            {
                 scale = scale_x;
+            }
             else
+            {
                 scale = scale_y;
-
-            int32 horizontal_padding = (client_width - scale * GAME_HORIZONTAL_RESOLUTION) / 2;
-            int32 vertical_padding = (client_height - scale * GAME_VERTICAL_RESOLUTION) / 2;
+            }
 
             int32 present_width = GAME_HORIZONTAL_RESOLUTION * scale;
             int32 present_height = GAME_VERTICAL_RESOLUTION * scale;
+
             int32 present_min_x = (client_width - present_width) / 2;
             int32 present_max_x = (client_width + present_width) / 2;
             int32 present_min_y = (client_height - present_height) / 2;
             int32 present_max_y = (client_height + present_height) / 2;
+
+            PatBlt(device_context, 0, 0, present_min_x, client_height, BLACKNESS);
+            PatBlt(device_context, present_max_x, 0, client_width - present_max_x, client_height, BLACKNESS);
+            PatBlt(device_context, 0, 0, client_width, present_min_y, BLACKNESS);
+            PatBlt(device_context, 0, present_max_y, client_width, client_height - present_max_y, BLACKNESS);
 
             StretchBlt(device_context, present_min_x , present_min_y, present_width, present_height,
              		   memory_device_context, 0, GAME_VERTICAL_RESOLUTION - 1, GAME_HORIZONTAL_RESOLUTION, -GAME_VERTICAL_RESOLUTION, SRCCOPY);
@@ -183,7 +190,6 @@ HWND initialize_window(HINSTANCE instance, int32 client_width, int32 client_heig
     window_class.hInstance = instance;
     window_class.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(32512));
     window_class.hIcon = LoadIconW(0, MAKEINTRESOURCEW(32513));
-    window_class.hbrBackground = GetStockObject(BLACK_PEN);
     window_class.lpszClassName = L"Blobby Volley 3 by Qvil";
 
     RegisterClassExW(&window_class);
@@ -232,13 +238,38 @@ void process_window_messages()
                 break;
             }
             case WM_LBUTTONDOWN:
-            case WM_LBUTTONUP:
-            case WM_RBUTTONDOWN:
-            case WM_RBUTTONUP:
+            {
+                process_button(BUTTON_LEFT, 1);
+
+                break;
+            }
             case WM_MBUTTONDOWN:
+            {
+                process_button(BUTTON_MIDDLE, 1);
+
+                break;
+            }
+            case WM_RBUTTONDOWN:
+            {
+                process_button(BUTTON_RIGHT, 1);
+
+                break;
+            }
+            case WM_LBUTTONUP:
+            {
+                 process_button(BUTTON_LEFT, 0);
+
+                 break;
+            }
             case WM_MBUTTONUP:
             {
+                 process_button(BUTTON_MIDDLE, 0);
 
+                 break;
+            }
+            case WM_RBUTTONUP:
+            {
+                process_button(BUTTON_RIGHT, 0);
 
                 break;
             }
@@ -261,10 +292,34 @@ void process_window_messages()
             }
             case WM_MOUSEMOVE:
             {
-                int32 position_x = GET_X_LPARAM(message.lParam);
-                int32 position_y = client_height - GET_Y_LPARAM(message.lParam);
+                int32 mouse_position_x = GET_X_LPARAM(message.lParam);
+                int32 mouse_position_y = client_height - GET_Y_LPARAM(message.lParam) - 1;
 
-                //process_mouse(position_x, position_y, client_width, client_height);
+                int32 scale_x = client_width / GAME_HORIZONTAL_RESOLUTION;
+                int32 scale_y = client_height / GAME_VERTICAL_RESOLUTION;
+
+                int32 scale = 0;
+                if (scale_x < scale_y)
+                {
+                    scale = scale_x;
+                }
+                else
+                {
+                    scale = scale_y;
+                }
+
+                int32 present_width = GAME_HORIZONTAL_RESOLUTION * scale;
+                int32 present_height = GAME_VERTICAL_RESOLUTION * scale;
+
+                int32 present_min_x = (client_width - present_width) / 2;
+                int32 present_max_x = (client_width + present_width) / 2;
+                int32 present_min_y = (client_height - present_height) / 2;
+                int32 present_max_y = (client_height + present_height) / 2;
+
+                if (mouse_position_x >= present_min_x && mouse_position_y >= present_min_y && mouse_position_x < present_max_x && mouse_position_y < present_max_y)
+                {
+                    process_mouse(mouse_position_x - present_min_x, mouse_position_y - present_min_y, present_width, present_height);
+                }
 
                 break;
             }

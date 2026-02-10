@@ -1,11 +1,11 @@
 @echo off
 
-SET no_c_runtime=0
+SET no_c_runtime=1
 SET no_c_extention=0
 SET debug_info=1
 SET fast_code=0
 SET embed_assets=0
-SET internal=1
+SET internal=0
 
 IF %embed_assets%==1 (
     SET compiler_macros=/DEMBED_ASSETS
@@ -48,8 +48,6 @@ SET debug_linker_flags=%no_c_runtime_debug_linker_flag% /incremental:no /opt:ref
 
 IF %internal%==1 (
     CL %compiler_macros% %compiler_flags% ..\code\windows\main.c /link %linker_flags% /OUT:main.exe
-    CL %compiler_macros% %compiler_flags% ..\code\windows\main.c /link %linker_flags% /OUT:main2.exe
-    CL %compiler_macros% %compiler_flags% ..\code\windows\main.c /link %linker_flags% /OUT:main3.exe
 ) ELSE (
     CL %compiler_macros% %compiler_flags% /LD ..\code\windows\game_dll.c /link %debug_linker_flags% /PDB:game_%random%.pdb /OUT:game.dll
     ECHO(

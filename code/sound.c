@@ -1,12 +1,11 @@
-Sound read_sound_file(char8* file_name)
+Sound read_sound_file(char8* file_name, int64 file_name_length, void* buffer)
 {
     Sound result = { 0 };
 
-    uint32 file_size = platform_api.get_file_size(file_name);
-    void* file_memory = platform_api.allocate_memory(file_size);
-    if (platform_api.read_file(file_name, file_memory))
+    int64 file_size = get_file_size(file_name, file_name_length);
+    if (read_file(file_name, file_name_length, buffer))
     {
-        Wav_file_header* wav_file_header = (Wav_file_header*)file_memory;
+        Wav_file_header* wav_file_header = (Wav_file_header*)buffer;
 
         result.memory = wav_file_header + 1;
         result.size = wav_file_header->data_size;

@@ -13,9 +13,9 @@ static int64 get_file_size(char8* file_name, int64 file_name_length)
     return platform_api.get_file_size(file_name, file_name_length);
 }
 
-static bool32 read_file(char8* file_name, int64 file_name_length, void* memory)
+static bool32 read_file(char8* file_name, int64 file_name_length, void* buffer)
 {
-    return platform_api.read_file(file_name, file_name_length, memory);
+    return platform_api.read_file(file_name, file_name_length, buffer);
 }
 
 static bool32 write_file(char8* file_name, int64 file_name_length, void* data, int64 size)

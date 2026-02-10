@@ -15,24 +15,30 @@ typedef struct
 {
     Image_view offscreen;
 
-    uint64 start_time;
-    uint64 time_per_update;
-    uint64 accumulator;
-    uint64 previous_time;
-    uint64 current_time;
+    int64 start_time;
+    int64 time_per_update;
+    int64 accumulator;
+    int64 previous_time;
+    int64 current_time;
 
-    Game_state client_state;
-    Game_state server_state;
+    int64 time_per_frame;
+    int64 accumulator2;
 
-    uint32 ips[MAX_PLAYERS];
-    uint16 ports[MAX_PLAYERS];
-    bool32 is_connected[MAX_PLAYERS];
+    Game_state state;
+    Game_state previous_state;
+    Player_input previous_input;
 
-    bool32 is_server;
-    bool32 is_client;
-    bool32 is_offline;
+    Sound test_sound;
 
-    Tick_input tick_input;
+    // uint32 ips[MAX_PLAYERS];
+    // uint16 ports[MAX_PLAYERS];
+    // bool32 is_connected[MAX_PLAYERS];
+
+    // bool32 is_server;
+    // bool32 is_client;
+    // bool32 is_offline;
+
+    // Tick_input tick_input;
 } Game;
 
 static Game* game = { 0 };

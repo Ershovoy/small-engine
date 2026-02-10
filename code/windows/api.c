@@ -27,7 +27,7 @@ static int64 get_file_size_implementation(char8* file_name, int64 file_name_leng
     return result;
 }
 
-static bool32 read_file_implementation(char8* file_name, int64 file_name_length, void* memory)
+static bool32 read_file_implementation(char8* file_name, int64 file_name_length, void* buffer)
 {
     bool32 result = 0;
 
@@ -41,7 +41,7 @@ static bool32 read_file_implementation(char8* file_name, int64 file_name_length,
             // TODO: Read file function can read maximum 2048 megabytes, due to size of its third parameter.
             //       How can we get around it?
             DWORD readed_file_size;
-            if (ReadFile(file_handle, memory, file_size, (DWORD*)&readed_file_size, 0))
+            if (ReadFile(file_handle, buffer, file_size, (DWORD*)&readed_file_size, 0))
             {
                 if (readed_file_size == file_size)
                 {

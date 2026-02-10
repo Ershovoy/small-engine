@@ -14,14 +14,16 @@ static void render_game_state(Game_state* state)
     draw_circle(0, 228, 54, 100, 70, 14);
     draw_circle(0, 228, 54, 100, 80, 10);
 
-    for (int32 i = 0; i < MAX_PLAYERS; i += 1)
-    {
-        if (game->is_connected)
-        {
-            Vec2i position = state->player_positions[i];
-            draw_circle(255, 255, 255, (float32)position.e1, (float32)position.e2, 16.0f);
-        }
-    }
+    // for (int32 i = 0; i < MAX_PLAYERS; i += 1)
+    // {
+    //     Vec2i position = state->player_positions[i];
+    //     draw_circle(255, 255, 255, (float32)position.e1, (float32)position.e2, 8.0f);
+
+    // }
+
+    draw_circle(255, 255, 255, state->position.e1, state->position.e2, 10.0f);
+
+    draw_circle(255, 255, 255, state->mouse_position.e1, state->mouse_position.e2, 6.0f);
 
     present_offscreen(game->offscreen);
 }
