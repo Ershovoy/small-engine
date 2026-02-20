@@ -3,19 +3,19 @@
 
 // }
 
-static void clear(Image_view image_view, Color color)
+static void clear(uint8 red, uint8 green, uint8 blue)
 {
-    uint32* image_row = image_view.image.memory;
-    for (int32 y = 0; y < image_view.height; y += 1)
+    uint32* image_row = game->offscreen.image.memory;
+    for (int32 y = 0; y < game->offscreen.height; y += 1)
     {
         uint32* image_pixel = image_row;
-        for (int32 x = 0; x < image_view.width; x += 1)
+        for (int32 x = 0; x < game->offscreen.width; x += 1)
         {
-            *image_pixel = *(uint32*)&color;
+            *image_pixel = (uint32)(red | green << 8 | blue << 16);
 
             image_pixel += 1;
         }
-        image_row += image_view.width;
+        image_row += game->offscreen.width;
     }
 }
 
