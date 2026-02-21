@@ -92,58 +92,114 @@ static void server()
     game->update_accumulator += delta_time;
     if (game->update_accumulator >= game->time_per_update)
     {
-        Tick_input tick_input = { 0 };
+        Tick_input tick_input = game->previous_tick_input;
         tick_input.tick = game->state.tick;
 
         uint32 out_ip = { 0 };
         uint16 out_port = { 0 };
-        Player_input player_input = { 0 };
-        while(net_receive(&player_input, sizeof(Player_input), &out_ip, &out_port))
+        uint8 packet_buffer[KILOBYTES(2)] = { 0 };
+        while (net_receive(&packet_buffer, sizeof(packet_buffer), &out_ip, &out_port))
         {
-            for (int32 i = 0; i < MAX_PLAYERS; i += 1)
+            Packet_header* packet_header = (Packet_header*)packet_buffer;
+            void* packet_payload = (uint8*)packet_buffer;
+            switch (packet_header->type)
             {
-                if (game->ips[i] == out_ip && game->ports[i] == out_port)
+                case PACKET_CONNECT:
                 {
-                    tick_input.player_inputs[i] = player_input;
+                    for (int32 i = 0; i < MAX_PLAYERS; i += 1)
+                    {
+                        if (!game->is_connected[i])
+                        {
+                            Packet_game_state packet_game_state = { 0 };
+                            packet_game_state.header.type = PACKET_GAME_STATE;
+                            packet_game_state.game_state = game->state;
+                            net_send(&packet_game_state, sizeof(Packet_game_state), out_ip, out_port);
+
+                            game->ips[i] = out_ip;
+                            game->ports[i] = out_port;
+                            game->is_connected[i] = 1;
+                            game->last_packet_time[i] = game->current_time;
+
+                            break;
+                        }
+                    }
 
                     break;
                 }
-
-                if (!game->is_connected[i])
+                case PACKET_DISCONNECT:
                 {
-                    game->ips[i] = out_ip;
-                    game->ports[i] = out_port;
-                    game->is_connected[i] = 1;
+                    for (int32 i = 0; i < MAX_PLAYERS; i += 1)
+                    {
+                        if (game->ips[i] == out_ip && game->ports[i] == out_port && game->is_connected[i])
+                        {
+                            game->ips[i] = 0;
+                            game->ports[i] = 0;
+                            game->is_connected[i] = 0;
 
-                    tick_input.player_inputs[i] = player_input;
+                            break;
+                        }
+                    }
 
+                    break;
+                }
+                // TODO: If case client lag, server will discard all accumulated inputs except for the last one.
+                case PACKET_PLAYER_INPUT:
+                {
+                    Packet_player_input* packet_player_input = (Packet_player_input*)packet_payload;
+
+                    for (int32 i = 0; i < MAX_PLAYERS; i += 1)
+                    {
+                        if (game->ips[i] == out_ip && game->ports[i] == out_port && game->is_connected[i])
+                        {
+                            tick_input.player_inputs[i] = packet_player_input->player_input;
+                            game->last_packet_time[i] = game->current_time;
+
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                default:
+                {
                     break;
                 }
             }
+
         }
 
-        bool32 is_all_players_connected = 1;
         for (int32 i = 0; i < MAX_PLAYERS; i += 1)
         {
-            if (!game->is_connected[i])
+            Packet_disconnect packet_disconnect = { 0 };
+            packet_disconnect.header.type = PACKET_DISCONNECT;
+
+            if (game->is_connected[i] && game->last_packet_time[i] + game->time_per_update * 600 < game->current_time)
             {
-                is_all_players_connected = 0;
+                game->ips[i] = 0;
+                game->ports[i] = 0;
+                game->is_connected[i] = 0;
+                game->last_packet_time[i] = 0;
+
+                net_send(&packet_disconnect, sizeof(Packet_disconnect), game->ips[i], game->ports[i]);
             }
         }
 
-        if (is_all_players_connected)
+        for (int32 i = 0; i < MAX_PLAYERS; i += 1)
         {
-            for (int32 i = 0; i < MAX_PLAYERS; i += 1)
-            {
-                if (game->is_connected[i])
-                {
-                    net_send(&tick_input, sizeof(Tick_input), game->ips[i], game->ports[i]);
-                }
-            }
+            Packet_tick_input packet_tick_input = { 0 };
+            packet_tick_input.header.type = PACKET_TICK_INPUT;
+            packet_tick_input.tick_input = tick_input;
 
-            update_game_state(&game->state, tick_input, game->time_per_update / 1'000'000'000.0f);
-            render_game_state(&game->state);
+            if (game->is_connected[i])
+            {
+                net_send(&packet_tick_input, sizeof(Packet_tick_input), game->ips[i], game->ports[i]);
+            }
         }
+
+        update_game_state(&game->state, tick_input, game->time_per_update / 1'000'000'000.0f);
+        render_game_state(&game->state);
+
+        game->previous_tick_input = tick_input;
 
         game->update_accumulator -= game->time_per_update;
     }
@@ -162,29 +218,73 @@ static void client()
 
     uint32 out_ip = { 0 };
     uint16 out_port = { 0 };
-    Tick_input tick_input = { 0 };
-    while (net_receive(&tick_input, sizeof(Tick_input), &out_ip, &out_port))
+    uint8 packet_buffer[KILOBYTES(2)] = { 0 };
+    while (net_receive(&packet_buffer, sizeof(packet_buffer), &out_ip, &out_port))
     {
-        int32 index = tick_input.tick % MAX_BUFFERED_TICKS;
-        if (!game->tick_input_valid[index])
+        Packet_header* packet_header = (Packet_header*)packet_buffer;
+        switch (packet_header->type)
         {
-            game->tick_input_buffer[index] = tick_input;
-            game->tick_input_valid[index] = 1;
-        }
-        else
-        {
-            *(int32*)0 = 0;
+            case PACKET_TICK_INPUT:
+            {
+                Packet_tick_input* packet_tick_input = (Packet_tick_input*)packet_buffer;
+
+                int32 index = packet_tick_input->tick_input.tick % MAX_BUFFERED_TICKS;
+                if (!game->tick_input_valid[index])
+                {
+                    game->tick_input_buffer[index] = packet_tick_input->tick_input;
+                    game->tick_input_valid[index] = 1;
+                }
+                else
+                {
+                    game->state = (Game_state){ 0 };
+                    *(int32*)0 = 0;
+                }
+
+                break;
+            }
+            case PACKET_GAME_STATE:
+            {
+                Packet_game_state* packet_game_state = (Packet_game_state*)packet_buffer;
+
+                game->state = packet_game_state->game_state;
+
+                break;
+            }
+            case PACKET_DISCONNECT:
+            {
+                game->state = (Game_state){ 0 };
+            }
+            default:
+            {
+                break;
+            }
         }
     }
 
-    int64 time_scale = 0;
+    int32 buffered_ticks = 0;
+    for (int32 i = 0; i < MAX_BUFFERED_TICKS; i += 1)
+    {
+        if (game->tick_input_valid[i])
+        {
+            buffered_ticks += 1;
+        }
+    }
 
+    int64 time_scale = 1;
+    if (buffered_ticks > 60)
+    {
+        time_scale = 2;
+    }
 
-    game->update_accumulator += delta_time;
+    game->update_accumulator += delta_time * time_scale;
     if (game->update_accumulator >= game->time_per_update)
     {
         Player_input player_input = collect_player_input();
-        net_send(&player_input, sizeof(Player_input), 0x7f000001, 0xFFFF); // 0x7f000001 = 127.0.0.1 // 0x5DAB0267 = 93.171.2.103 // 0xC0A8006A = 192.168.0.106
+
+        Packet_player_input packet_player_input = { 0 };
+        packet_player_input.header.type = PACKET_PLAYER_INPUT;
+        packet_player_input.player_input = player_input;
+        net_send(&packet_player_input, sizeof(Packet_player_input), SERVER_IP, SERVER_PORT);
 
         int32 index = game->state.tick % MAX_BUFFERED_TICKS;
         if (game->tick_input_valid[index])
@@ -275,7 +375,11 @@ static void game_loop()
         {
             game->is_client = 1;
             game->is_offline = 0;
-            initialize_game_state(&game->state);
+
+            Packet_connect packet_connet = { 0 };
+            packet_connet.header.type = PACKET_CONNECT;
+
+            net_send(&packet_connet, sizeof(Packet_player_input), SERVER_IP, SERVER_PORT);
         }
     }
     if (is_button_pressed(KEY_F2))

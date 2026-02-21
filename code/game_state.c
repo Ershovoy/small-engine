@@ -37,26 +37,26 @@ static void update_game_state(Game_state* state, Tick_input input, float32 delta
         fixed32 target_y = input.player_inputs[i].cursor_y;
 
         // Clamp X
-        // if (target_x < int32_to_fixed32(PADDLE_MIN_X(PADDLE_RADIUS)))
-        //     target_x = int32_to_fixed32(PADDLE_MIN_X(PADDLE_RADIUS));
-        // if (target_x > int32_to_fixed32(PADDLE_MAX_X(PADDLE_RADIUS)))
-        //     target_x = int32_to_fixed32(PADDLE_MAX_X(PADDLE_RADIUS));
+        if (target_x < int32_to_fixed32(PADDLE_MIN_X(PADDLE_RADIUS)))
+            target_x = int32_to_fixed32(PADDLE_MIN_X(PADDLE_RADIUS));
+        if (target_x > int32_to_fixed32(PADDLE_MAX_X(PADDLE_RADIUS)))
+            target_x = int32_to_fixed32(PADDLE_MAX_X(PADDLE_RADIUS));
 
-        // // Clamp Y по половинам
-        // if (i == 0)
-        // {
-        //     if (target_y < int32_to_fixed32(PADDLE_0_MIN_Y(PADDLE_RADIUS)))
-        //         target_y = int32_to_fixed32(PADDLE_0_MIN_Y(PADDLE_RADIUS));
-        //     if (target_y > int32_to_fixed32(PADDLE_0_MAX_Y(PADDLE_RADIUS)))
-        //         target_y = int32_to_fixed32(PADDLE_0_MAX_Y(PADDLE_RADIUS));
-        // }
-        // else
-        // {
-        //     if (target_y < int32_to_fixed32(PADDLE_1_MIN_Y(PADDLE_RADIUS)))
-        //         target_y = int32_to_fixed32(PADDLE_1_MIN_Y(PADDLE_RADIUS));
-        //     if (target_y > int32_to_fixed32(PADDLE_1_MAX_Y(PADDLE_RADIUS)))
-        //         target_y = int32_to_fixed32(PADDLE_1_MAX_Y(PADDLE_RADIUS));
-        // }
+        // Clamp Y по половинам
+        if (i == 0)
+        {
+            if (target_y < int32_to_fixed32(PADDLE_0_MIN_Y(PADDLE_RADIUS)))
+                target_y = int32_to_fixed32(PADDLE_0_MIN_Y(PADDLE_RADIUS));
+            if (target_y > int32_to_fixed32(PADDLE_0_MAX_Y(PADDLE_RADIUS)))
+                target_y = int32_to_fixed32(PADDLE_0_MAX_Y(PADDLE_RADIUS));
+        }
+        else
+        {
+            if (target_y < int32_to_fixed32(PADDLE_1_MIN_Y(PADDLE_RADIUS)))
+                target_y = int32_to_fixed32(PADDLE_1_MIN_Y(PADDLE_RADIUS));
+            if (target_y > int32_to_fixed32(PADDLE_1_MAX_Y(PADDLE_RADIUS)))
+                target_y = int32_to_fixed32(PADDLE_1_MAX_Y(PADDLE_RADIUS));
+        }
 
         fixed32 dx     = target_x - state->paddle_position_x[i];
         fixed32 dy     = target_y - state->paddle_position_y[i];

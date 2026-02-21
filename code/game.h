@@ -12,7 +12,13 @@
 #include "network.h"
 #include "sound.h"
 
-#define MAX_BUFFERED_TICKS 64
+#define MAX_BUFFERED_TICKS 64*16
+
+// 0x7f000001 = 127.0.0.1
+// 0x5DAB0267 = 93.171.2.103
+// 0xC0A8006A = 192.168.0.106
+#define SERVER_IP 0x7f000001
+#define SERVER_PORT 0xFFFF
 
 typedef struct
 {
@@ -37,6 +43,7 @@ typedef struct
     uint32 ips[MAX_PLAYERS];
     uint16 ports[MAX_PLAYERS];
     bool32 is_connected[MAX_PLAYERS];
+    int64 last_packet_time[MAX_PLAYERS];
 
     bool32 is_server;
     bool32 is_client;
