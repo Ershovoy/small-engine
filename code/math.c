@@ -16,6 +16,20 @@ int32 round_float32_to_int32(float32 number)
     return (int32)number;
 }
 
+static uint64 hash_fnv1a(void* data, int64 size)
+{
+    uint64 result = 14695981039346656037;
+    byte* bytes = (byte*)data;
+
+    for (int64 i = 0; i < size; i += 1)
+    {
+        result ^= bytes[i];
+        result *= 1099511628211;
+    }
+
+    return result;
+}
+
 // https://c-for-dummies.com/blog/?p=4250
 static float32 square_root(float32 x)
 {

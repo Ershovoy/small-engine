@@ -12,12 +12,12 @@
 #include "network.h"
 #include "sound.h"
 
-#define MAX_BUFFERED_TICKS 64*16
+#define MAX_BUFFERED_TICKS (64*8)
 
 // 0x7f000001 = 127.0.0.1
 // 0x5DAB0267 = 93.171.2.103
 // 0xC0A8006A = 192.168.0.106
-#define SERVER_IP 0x7f000001
+#define SERVER_IP 0x5DAB0267
 #define SERVER_PORT 0xFFFF
 
 typedef struct
@@ -48,6 +48,8 @@ typedef struct
     bool32 is_server;
     bool32 is_client;
     bool32 is_offline;
+
+    Tick_input tick_input_server_batch[TICK_INPUT_BATCH_SIZE];
 
     Tick_input tick_input_buffer[MAX_BUFFERED_TICKS];
     bool32 tick_input_valid[MAX_BUFFERED_TICKS];

@@ -175,24 +175,34 @@ static void server()
 
             if (game->is_connected[i] && game->last_packet_time[i] + game->time_per_update * 600 < game->current_time)
             {
+                net_send(&packet_disconnect, sizeof(Packet_disconnect), game->ips[i], game->ports[i]);
+
                 game->ips[i] = 0;
                 game->ports[i] = 0;
                 game->is_connected[i] = 0;
                 game->last_packet_time[i] = 0;
-
-                net_send(&packet_disconnect, sizeof(Packet_disconnect), game->ips[i], game->ports[i]);
             }
         }
 
+        game->tick_input_server_batch[tick_input.tick % TICK_INPUT_BATCH_SIZE] = tick_input;
+
         for (int32 i = 0; i < MAX_PLAYERS; i += 1)
         {
-            Packet_tick_input packet_tick_input = { 0 };
-            packet_tick_input.header.type = PACKET_TICK_INPUT;
-            packet_tick_input.tick_input = tick_input;
-
-            if (game->is_connected[i])
+            Packet_tick_input_batch packet_tick_input_batch = { 0 };
+            packet_tick_input_batch.header.type = PACKET_TICK_INPUT_BATCH;
+            for (int32 i = 0; i < TICK_INPUT_BATCH_SIZE; i += 1)
             {
-                net_send(&packet_tick_input, sizeof(Packet_tick_input), game->ips[i], game->ports[i]);
+                packet_tick_input_batch.tick_inputs[i] = game->tick_input_server_batch[i];
+            }
+
+            // Packet_tick_input packet_tick_input = { 0 };
+            // packet_tick_input.header.type = PACKET_TICK_INPUT;
+            // packet_tick_input.tick_input = tick_input;
+
+            if (game->is_connected[i] && tick_input.tick % 32 != 0)
+            {
+                net_send(&packet_tick_input_batch, sizeof(Packet_tick_input_batch), game->ips[i], game->ports[i]);
+                // net_send(&packet_tick_input, sizeof(Packet_tick_input), game->ips[i], game->ports[i]);
             }
         }
 
@@ -218,17 +228,45 @@ static void client()
 
     uint32 out_ip = { 0 };
     uint16 out_port = { 0 };
-    uint8 packet_buffer[KILOBYTES(2)] = { 0 };
+    uint8 packet_buffer[KILOBYTES(4)] = { 0 };
     while (net_receive(&packet_buffer, sizeof(packet_buffer), &out_ip, &out_port))
     {
         Packet_header* packet_header = (Packet_header*)packet_buffer;
         switch (packet_header->type)
         {
+            case PACKET_TICK_INPUT_BATCH:
+            {
+                Packet_tick_input_batch* packet_tick_input_batch = (Packet_tick_input_batch*)packet_buffer;
+
+                for (int32 i = 0; i < TICK_INPUT_BATCH_SIZE; i += 1)
+                {
+                    if (game->state.tick <= packet_tick_input_batch->tick_inputs[i].tick)
+                    {
+                        int32 index = packet_tick_input_batch->tick_inputs[i].tick % MAX_BUFFERED_TICKS;
+                        if (!game->tick_input_valid[index])
+                        {
+                            game->tick_input_buffer[index] = packet_tick_input_batch->tick_inputs[i];
+                            game->tick_input_valid[index] = 1;
+                        }
+                        //else
+                        {
+                            //*(int32*)0 = 0;
+                        }
+                    }
+                }
+
+                break;
+            }
             case PACKET_TICK_INPUT:
             {
                 Packet_tick_input* packet_tick_input = (Packet_tick_input*)packet_buffer;
 
                 int32 index = packet_tick_input->tick_input.tick % MAX_BUFFERED_TICKS;
+                char8 bs[32];
+                String s = { 0, bs };
+                s.length = int32_to_string(bs, 32, (int32)packet_tick_input->tick_input.tick);
+                console_write(s);
+                console_write(STRING_LITERAL("\n"));
                 if (!game->tick_input_valid[index])
                 {
                     game->tick_input_buffer[index] = packet_tick_input->tick_input;
@@ -236,7 +274,6 @@ static void client()
                 }
                 else
                 {
-                    game->state = (Game_state){ 0 };
                     *(int32*)0 = 0;
                 }
 
@@ -271,9 +308,14 @@ static void client()
     }
 
     int64 time_scale = 1;
-    if (buffered_ticks > 60)
+    if (buffered_ticks > MAX_BUFFERED_TICKS / 8 / 2)
     {
         time_scale = 2;
+
+    }
+    if (buffered_ticks == MAX_BUFFERED_TICKS)
+    {
+        *(int32*)0 = 0;
     }
 
     game->update_accumulator += delta_time * time_scale;
@@ -287,7 +329,7 @@ static void client()
         net_send(&packet_player_input, sizeof(Packet_player_input), SERVER_IP, SERVER_PORT);
 
         int32 index = game->state.tick % MAX_BUFFERED_TICKS;
-        if (game->tick_input_valid[index])
+        if (game->tick_input_valid[index] && game->tick_input_buffer[index].tick == game->state.tick)
         {
             game->previous_state = game->state;
             game->previous_tick_input = game->tick_input_buffer[index];
@@ -366,6 +408,69 @@ static void offline()
 
     game->previous_time = game->current_time;
 }
+
+// static void three_in_one()
+// {
+//     game->current_time = get_time_tick() - game->start_time;
+//     int64 delta_time = game->current_time - game->previous_time;
+//     if (delta_time > game->time_per_update)
+//     {
+//         delta_time = game->time_per_update;
+//     }
+
+//     game->update_accumulator += delta_time;
+//     if (game->update_accumulator >= game->time_per_update)
+//     {
+//         Tick_input tick_input = { 0 };
+
+//         bool32 should_update = 0;
+
+//         if (game->is_server)
+//             should_update = should_server_tick(&tick_input);
+//         else if (game->is_client)
+//             should_update = should_client_tick(&tick_input);
+//         else
+//             should_update = should_offline_tick(&tick_input);
+
+//         if (should_update)
+//         {
+//             game->previous_state = game->state;
+//             game->previous_tick_input = tick_input;
+
+//             update_game_state(&game->state, tick_input, game->time_per_update / 1'000'000'000.0f);
+//             if (game->is_server)
+//             {
+//                 render_game_state(&game->state);
+//             }
+//         }
+
+//         adjust_input();
+
+//         game->previous_frame_time = game->current_time;
+//         game->update_accumulator -= game->time_per_update;
+//     }
+
+
+//     if (delta_time > game->time_per_frame)
+//     {
+//         delta_time = game->time_per_frame;
+//     }
+
+//     game->frame_accumulator += delta_time;
+//     if (game->frame_accumulator >= game->time_per_frame)
+//     {
+//         if (!game->is_server)
+//         {
+//             update_game_state(&game->previous_state, game->previous_tick_input, (game->current_time - game->previous_frame_time) / 1'000'000'000.0f);
+//             render_game_state(&game->previous_state);
+//         }
+
+//         game->previous_frame_time = game->current_time;
+//         game->frame_accumulator -= game->time_per_frame;
+//     }
+
+//     game->previous_time = game->current_time;
+// }
 
 static void game_loop()
 {

@@ -401,8 +401,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (!instance)
         ExitProcess(1);
 
-    // if (!AllocConsole())
-    //     ExitProcess(1);
+    if (!AllocConsole())
+        ExitProcess(1);
 
     if (!initialize_xaudio2())
         ExitProcess(1);

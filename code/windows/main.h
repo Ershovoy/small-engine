@@ -20,4 +20,4 @@ static LONG_PTR previous_window_style = { 0 };
 static SOCKET sock = { 0 };
 
 #define SCRATCH_BUFFER_SIZE MEGABYTES(1)
-static byte* scratch_buffer[SCRATCH_BUFFER_SIZE];
+static byte scratch_buffer[SCRATCH_BUFFER_SIZE];
