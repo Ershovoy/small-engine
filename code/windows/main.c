@@ -90,8 +90,8 @@ LRESULT CALLBACK window_procedure(HWND   window,
         case WM_GETMINMAXINFO:
         {
             RECT client_rectangle = { 0 };
-            client_rectangle.right = GAME_HORIZONTAL_RESOLUTION;
-            client_rectangle.bottom = GAME_VERTICAL_RESOLUTION;
+            client_rectangle.right = game_horizontal_resoultion;
+            client_rectangle.bottom = game_vertical_resolution;
             RECT window_rectangle = client_rectangle;
             AdjustWindowRectEx(&window_rectangle, window_style, 0, window_extended_style);
             LONG minimal_window_width = window_rectangle.right - window_rectangle.left;
@@ -108,8 +108,8 @@ LRESULT CALLBACK window_procedure(HWND   window,
             PAINTSTRUCT paint_struct;
             HDC device_context = BeginPaint(window, &paint_struct);
 
-            int32 scale_x = client_width / GAME_HORIZONTAL_RESOLUTION;
-            int32 scale_y = client_height / GAME_VERTICAL_RESOLUTION;
+            int32 scale_x = client_width / game_horizontal_resoultion;
+            int32 scale_y = client_height / game_vertical_resolution;
 
             int32 scale = 0;
             if (scale_x < scale_y)
@@ -121,8 +121,8 @@ LRESULT CALLBACK window_procedure(HWND   window,
                 scale = scale_y;
             }
 
-            int32 present_width = GAME_HORIZONTAL_RESOLUTION * scale;
-            int32 present_height = GAME_VERTICAL_RESOLUTION * scale;
+            int32 present_width = game_horizontal_resoultion * scale;
+            int32 present_height = game_vertical_resolution * scale;
 
             int32 present_min_x = (client_width - present_width) / 2;
             int32 present_max_x = (client_width + present_width) / 2;
@@ -135,7 +135,7 @@ LRESULT CALLBACK window_procedure(HWND   window,
             PatBlt(device_context, 0, present_max_y, client_width, client_height - present_max_y, BLACKNESS);
 
             StretchBlt(device_context, present_min_x , present_min_y, present_width, present_height,
-             		   memory_device_context, 0, GAME_VERTICAL_RESOLUTION - 1, GAME_HORIZONTAL_RESOLUTION, -GAME_VERTICAL_RESOLUTION, SRCCOPY);
+             		   memory_device_context, 0, game_vertical_resolution - 1, game_horizontal_resoultion, -game_vertical_resolution, SRCCOPY);
 
             EndPaint(window, &paint_struct);
 
@@ -295,8 +295,8 @@ void process_window_messages()
                 int32 mouse_position_x = GET_X_LPARAM(message.lParam);
                 int32 mouse_position_y = client_height - GET_Y_LPARAM(message.lParam) - 1;
 
-                int32 scale_x = client_width / GAME_HORIZONTAL_RESOLUTION;
-                int32 scale_y = client_height / GAME_VERTICAL_RESOLUTION;
+                int32 scale_x = client_width / game_horizontal_resoultion;
+                int32 scale_y = client_height / game_vertical_resolution;
 
                 int32 scale = 0;
                 if (scale_x < scale_y)
@@ -308,8 +308,8 @@ void process_window_messages()
                     scale = scale_y;
                 }
 
-                int32 present_width = GAME_HORIZONTAL_RESOLUTION * scale;
-                int32 present_height = GAME_VERTICAL_RESOLUTION * scale;
+                int32 present_width = game_horizontal_resoultion * scale;
+                int32 present_height = game_vertical_resolution * scale;
 
                 int32 present_min_x = (client_width - present_width) / 2;
                 int32 present_max_x = (client_width + present_width) / 2;
@@ -353,8 +353,8 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
 
     BITMAPINFOHEADER bitmap_info = { 0 };
     bitmap_info.biSize = sizeof(BITMAPINFOHEADER);
-    bitmap_info.biWidth = MAX_GAME_HORIZONTAL_RESOLUTION;
-    bitmap_info.biHeight = -MAX_GAME_VERTICAL_RESOLUTION;
+    bitmap_info.biWidth = GAME_MAX_HORIZONTAL_RESOLUTION;
+    bitmap_info.biHeight = -GAME_MAX_VERTICAL_RESOLUTION;
     bitmap_info.biPlanes = 1;
     bitmap_info.biBitCount = 32;
     bitmap_info.biCompression = BI_RGB;
@@ -405,7 +405,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         ExitProcess(1);
 
     if (!initialize_xaudio2())
-        ExitProcess(1);
+       ExitProcess(1);
 
     WSADATA winsock_data;
     if (WSAStartup(0x202, &winsock_data))
@@ -416,7 +416,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         ExitProcess(1);
 
     uint64 non_blocking = 1;
-    if (ioctlsocket(sock, FIONBIO, &(u_long)non_blocking) != NO_ERROR)
+    if (ioctlsocket(sock, FIONBIO, (u_long*)&non_blocking) != NO_ERROR)
         ExitProcess(1);
 
     window = initialize_window(instance, client_width, client_height);
@@ -442,7 +442,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     WaitForSingleObject(thread_handle, INFINITE);
     CloseHandle(thread_handle);
 
-    destroy_xaudio2();
+    // destroy_xaudio2();
     WSACleanup();
 
     ReleaseDC(window, device_context);

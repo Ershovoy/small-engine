@@ -237,8 +237,11 @@ static void present_offscreen_implementation(void* memory, int32 width, int32 he
         }
 
         source_row += width;
-        destination_row += MAX_GAME_HORIZONTAL_RESOLUTION;
+        destination_row += GAME_MAX_HORIZONTAL_RESOLUTION;
     }
+
+    game_horizontal_resoultion = width;
+    game_vertical_resolution = height;
 
     InvalidateRect(window, 0, 0);
     UpdateWindow(window);

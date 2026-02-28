@@ -1,9 +1,21 @@
+#ifndef NO_C_EXTENTION
 #include <xaudio2.h>
+#endif
 
 #include "xaudio2.h"
 
 static bool32 initialize_xaudio2()
 {
+    xaudio2_callbacks_vtbl.OnStreamEnd = on_stream_end;
+    xaudio2_callbacks_vtbl.OnVoiceProcessingPassEnd = on_voice_processing_pass_end;
+    xaudio2_callbacks_vtbl.OnVoiceProcessingPassStart = on_voice_processing_pass_start;
+    xaudio2_callbacks_vtbl.OnBufferEnd = on_buffer_end;
+    xaudio2_callbacks_vtbl.OnBufferStart = on_buffer_start;
+    xaudio2_callbacks_vtbl.OnLoopEnd = on_loop_end;
+    xaudio2_callbacks_vtbl.OnVoiceError = on_voice_error;
+
+    xaudio2_callbacks.lpVtbl = &xaudio2_callbacks_vtbl;
+
     // MessageBox(NULL, "Failed to initialize COM!", "FAILURE", MB_OK);
     if (CoInitializeEx(0, COINIT_MULTITHREADED))
         return 0;
@@ -29,16 +41,14 @@ static bool32 initialize_xaudio2()
 static void xaudio2_play_sound(void* memory, int64 size, int32 sample_rate, int32 bits_per_sample, int32 number_of_channels)
 {
     int32 bytes_per_block = (number_of_channels * bits_per_sample) / 8;
-    WAVEFORMATEX wave_format =
-    {
-        .wFormatTag = WAVE_FORMAT_PCM,
-        .nChannels = (WORD)number_of_channels,
-        .nSamplesPerSec = sample_rate,
-        .wBitsPerSample = (WORD)bits_per_sample,
-        .nBlockAlign = (WORD)bytes_per_block,
-        .nAvgBytesPerSec = sample_rate * bytes_per_block,
-        .cbSize = 0
-    };
+    WAVEFORMATEX wave_format = { 0 };
+    wave_format.wFormatTag = WAVE_FORMAT_PCM;
+    wave_format.nChannels = (WORD)number_of_channels;
+    wave_format.nSamplesPerSec = sample_rate;
+    wave_format.wBitsPerSample = (WORD)bits_per_sample;
+    wave_format.nBlockAlign = (WORD)bytes_per_block;
+    wave_format.nAvgBytesPerSec = sample_rate * bytes_per_block;
+    wave_format.cbSize = 0;
 
     for (int32 i = 0; i < MAX_SIMULTANEOUS_SOUNDS; i += 1)
     {

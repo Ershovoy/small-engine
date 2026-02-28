@@ -2,7 +2,7 @@
 #include "game_dll.h"
 
 #if NO_C_EXTENTION
-#include <windows.h>
+#include "windows.h"
 #else
 #undef max
 #undef min

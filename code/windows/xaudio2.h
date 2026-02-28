@@ -28,18 +28,6 @@ static void on_buffer_start(IXAudio2VoiceCallback* this, void* buffer_context) {
 static void on_loop_end(IXAudio2VoiceCallback* this, void* buffer_context) { }
 static void on_voice_error(IXAudio2VoiceCallback* this, void* buffer_context, HRESULT error) { }
 
-static IXAudio2VoiceCallbackVtbl xaudio2_callbacks_vtbl =
-{
-    .OnStreamEnd = on_stream_end,
-    .OnVoiceProcessingPassEnd = on_voice_processing_pass_end,
-    .OnVoiceProcessingPassStart = on_voice_processing_pass_start,
-    .OnBufferEnd = on_buffer_end,
-    .OnBufferStart = on_buffer_start,
-    .OnLoopEnd = on_loop_end,
-    .OnVoiceError = on_voice_error
-};
+static IXAudio2VoiceCallbackVtbl xaudio2_callbacks_vtbl = { 0 };
 
-static IXAudio2VoiceCallback xaudio2_callbacks =
-{
-    .lpVtbl = &xaudio2_callbacks_vtbl
-};
+static IXAudio2VoiceCallback xaudio2_callbacks = { 0 };

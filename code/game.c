@@ -18,22 +18,22 @@ static bool32 initialize_game()
     game = arena_allocate(&arena, sizeof(Game));
 
     Image image = { 0 };
-    image.size = MAX_GAME_HORIZONTAL_RESOLUTION * MAX_GAME_VERTICAL_RESOLUTION;
+    image.size = GAME_MAX_HORIZONTAL_RESOLUTION * GAME_MAX_VERTICAL_RESOLUTION;
     image.memory = arena_allocate(&arena, image.size);
-    image.width = MAX_GAME_HORIZONTAL_RESOLUTION;
-    image.height = MAX_GAME_VERTICAL_RESOLUTION;
+    image.width = GAME_MAX_HORIZONTAL_RESOLUTION;
+    image.height = GAME_MAX_VERTICAL_RESOLUTION;
 
     Image_view image_view = { 0 };
     image_view.image = image;
-    image_view.width = GAME_HORIZONTAL_RESOLUTION;
-    image_view.height = GAME_VERTICAL_RESOLUTION;
+    image_view.width = GAME_DEFAULT_HORIZONTAL_RESOLUTION;
+    image_view.height = GAME_DEFAULT_VERTICAL_RESOLUTION;
 
     game->offscreen = image_view;
 
     game->time_per_update = (int64)1'000'000'000 / 60;
     game->start_time = get_time_tick();
 
-    game->time_per_frame = (int64)1'000'000'000 / 240;
+    game->time_per_frame = (int64)1'000'000'000 / 120;
 
     char8 file_name[] = "sample.wav";
     int64 file_size = get_file_size(file_name, lengthof(file_name));
@@ -57,9 +57,21 @@ static Player_input collect_player_input()
     Player_input player_input = { 0 };
     player_input.cursor_x = float32_to_fixed32(input.mouse.x);
     player_input.cursor_y = float32_to_fixed32(input.mouse.y);
+
     if (is_button_pressed(KEY_E))
     {
         play_sound(game->test_sound);
+    }
+
+    if (is_button_pressed(BUTTON_WHEEL_UP))
+    {
+        game->offscreen.width -= 2;
+        game->offscreen.height -= 2;
+    }
+    if (is_button_pressed(BUTTON_WHEEL_DOWN))
+    {
+        game->offscreen.width += 2;
+        game->offscreen.height += 2;
     }
 
     return player_input;
@@ -94,6 +106,7 @@ static void server()
     {
         Tick_input tick_input = game->previous_tick_input;
         tick_input.tick = game->state.tick;
+        tick_input.hash = hash_fnv1a(&game->state, sizeof(Game_state));
 
         uint32 out_ip = { 0 };
         uint16 out_port = { 0 };
@@ -262,11 +275,7 @@ static void client()
                 Packet_tick_input* packet_tick_input = (Packet_tick_input*)packet_buffer;
 
                 int32 index = packet_tick_input->tick_input.tick % MAX_BUFFERED_TICKS;
-                char8 bs[32];
-                String s = { 0, bs };
-                s.length = int32_to_string(bs, 32, (int32)packet_tick_input->tick_input.tick);
-                console_write(s);
-                console_write(STRING_LITERAL("\n"));
+
                 if (!game->tick_input_valid[index])
                 {
                     game->tick_input_buffer[index] = packet_tick_input->tick_input;
@@ -308,7 +317,7 @@ static void client()
     }
 
     int64 time_scale = 1;
-    if (buffered_ticks > MAX_BUFFERED_TICKS / 8 / 2)
+    if (buffered_ticks > MAX_BUFFERED_TICKS / 8)
     {
         time_scale = 2;
 
@@ -331,6 +340,11 @@ static void client()
         int32 index = game->state.tick % MAX_BUFFERED_TICKS;
         if (game->tick_input_valid[index] && game->tick_input_buffer[index].tick == game->state.tick)
         {
+            if (hash_fnv1a(&game->state, sizeof(Game_state)) != game->tick_input_buffer[index].hash)
+            {
+                *(int32*)0 = 0;
+            }
+
             game->previous_state = game->state;
             game->previous_tick_input = game->tick_input_buffer[index];
 

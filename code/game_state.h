@@ -17,9 +17,9 @@
 
 // Вычисляемая геометрия
 #define TABLE_LEFT           (TABLE_PADDING_X)
-#define TABLE_RIGHT          (GAME_HORIZONTAL_RESOLUTION - TABLE_PADDING_X)
+#define TABLE_RIGHT          (GAME_DEFAULT_HORIZONTAL_RESOLUTION - TABLE_PADDING_X)
 #define TABLE_TOP            (TABLE_PADDING_Y)
-#define TABLE_BOTTOM         (GAME_VERTICAL_RESOLUTION   - TABLE_PADDING_Y)
+#define TABLE_BOTTOM         (GAME_DEFAULT_VERTICAL_RESOLUTION   - TABLE_PADDING_Y)
 #define TABLE_CX             ((TABLE_LEFT  + TABLE_RIGHT)  / 2)
 #define TABLE_CY             ((TABLE_TOP   + TABLE_BOTTOM) / 2)
 #define TABLE_WIDTH          (TABLE_RIGHT  - TABLE_LEFT)
@@ -45,6 +45,7 @@ typedef struct
 typedef struct
 {
     uint64 tick;
+    uint64 hash;
     Player_input player_inputs[MAX_PLAYERS];
 } Tick_input;
 
