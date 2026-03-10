@@ -1,7 +1,7 @@
 @echo off
 
 SET no_c_runtime=1
-SET no_c_extention=1
+SET no_c_extention=0
 SET debug_info=1
 SET fast_code=0
 SET embed_assets=0

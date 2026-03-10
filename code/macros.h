@@ -12,3 +12,6 @@
 #define MEGABYTES(value) (KILOBYTES(value) * 1024)
 #define GIGABYTES(value) (MEGABYTES(value) * 1024)
 #define TERABYTES(value) (GIGABYTES(value) * 1024)
+
+#define MINIMUM(a, b) ((a) < (b) ? (a) : (b))
+#define MAXIMUM(a, b) ((a) > (b) ? (a) : (b))

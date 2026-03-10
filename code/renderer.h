@@ -1,10 +1,10 @@
-#define GAME_MIN_HORIZONTAL_RESOULUTION 40
-#define GAME_MIN_VERTICAL_RESOLUTION 30
+#define GAME_MIN_HORIZONTAL_RESOLUTION 40
+#define GAME_MIN_VERTICAL_RESOLUTION   30
 #define GAME_MAX_HORIZONTAL_RESOLUTION 3840
 #define GAME_MAX_VERTICAL_RESOLUTION   2160
 
-#define GAME_DEFAULT_HORIZONTAL_RESOLUTION 160
-#define GAME_DEFAULT_VERTICAL_RESOLUTION   120
+#define GAME_DEFAULT_HORIZONTAL_RESOLUTION 800 // 160
+#define GAME_DEFAULT_VERTICAL_RESOLUTION   600 //120
 
 typedef struct
 {
@@ -20,10 +20,10 @@ typedef struct
     uint32 compression;
     uint32 bitmap_size;
     int32 horizontal_resolution;
-    int32 vertical_resolutiion;
+    int32 vertical_resolution;
     uint32 color_number;
     uint32 important_color_number;
-} Bitmap_header;
+} Bitmap_file_header;
 
 typedef struct
 {

@@ -17,7 +17,7 @@
 // 0x7f000001 = 127.0.0.1
 // 0x5DAB0267 = 93.171.2.103
 // 0xC0A8006A = 192.168.0.106
-#define SERVER_IP 0x7f000001
+#define SERVER_IP 0x5DAB0267
 #define SERVER_PORT 0xFFFF
 
 typedef struct
@@ -39,6 +39,7 @@ typedef struct
     Tick_input previous_tick_input;
 
     Sound test_sound;
+    Image test_image;
 
     uint32 ips[MAX_PLAYERS];
     uint16 ports[MAX_PLAYERS];
@@ -53,8 +54,6 @@ typedef struct
 
     Tick_input tick_input_buffer[MAX_BUFFERED_TICKS];
     bool32 tick_input_valid[MAX_BUFFERED_TICKS];
-
-
 } Game;
 
 static Game* game = { 0 };

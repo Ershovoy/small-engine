@@ -1,181 +1,314 @@
+// ── Константы в fixed32 (вычисляются компилятором из float-дефайнов) ──────────
+
+#define FX_ZERO                     int32_to_fixed32(0)
+#define FX_ONE                      int32_to_fixed32(1)
+#define FX_TWO                      int32_to_fixed32(2)
+#define FX_HALF                     float32_to_fixed32(0.5f)
+
+#define FX_GRAVITATION              float32_to_fixed32(GRAVITATION)
+#define FX_BLOBBY_JUMP_BUFFER       float32_to_fixed32(BLOBBY_JUMP_BUFFER)
+#define FX_BLOBBY_JUMP_ACCELERATION float32_to_fixed32(BLOBBY_JUMP_ACCELERATION)
+#define FX_BLOBBY_SPEED             float32_to_fixed32(BLOBBY_SPEED)
+#define FX_BLOBBY_LOWER_SPHERE      float32_to_fixed32(BLOBBY_LOWER_SPHERE)
+#define FX_BLOBBY_UPPER_SPHERE      float32_to_fixed32(BLOBBY_UPPER_SPHERE)
+#define FX_BLOBBY_LOWER_RADIUS      float32_to_fixed32(BLOBBY_LOWER_RADIUS)
+#define FX_BLOBBY_UPPER_RADIUS      float32_to_fixed32(BLOBBY_UPPER_RADIUS)
+
+#define FX_BALL_GRAVITATION         float32_to_fixed32(BALL_GRAVITATION)
+#define FX_BALL_RADIUS              float32_to_fixed32(BALL_RADIUS)
+#define FX_BALL_COLLISION_VELOCITY  float32_to_fixed32(BALL_COLLISION_VELOCITY)
+
+#define FX_NET_POSITION_X           float32_to_fixed32(NET_POSITION_X)
+#define FX_NET_RADIUS               float32_to_fixed32(NET_RADIUS)
+#define FX_NET_SPHERE_POSITION      float32_to_fixed32(NET_SPHERE_POSITION)
+
+#define FX_GROUND_PLANE_HEIGHT      float32_to_fixed32(GROUND_PLANE_HEIGHT)
+#define FX_GROUND_PLANE_HEIGHT_MAX  float32_to_fixed32(GROUND_PLANE_HEIGHT_MAX)
+#define FX_LEFT_PLANE               float32_to_fixed32(LEFT_PLANE)
+#define FX_RIGHT_PLANE              float32_to_fixed32(RIGHT_PLANE)
+
+#define FX_STANDARD_BALL_HEIGHT     float32_to_fixed32(STANDARD_BALL_HEIGHT)
+#define FX_BALL_RESET_LEFT          float32_to_fixed32(200.0f)
+#define FX_BALL_RESET_RIGHT         float32_to_fixed32(600.0f)
+
+// Суммы радиусов для проверки столкновений
+#define FX_BALL_LOWER_RADIUS_SUM    float32_to_fixed32(BALL_RADIUS + BLOBBY_LOWER_RADIUS)
+#define FX_BALL_UPPER_RADIUS_SUM    float32_to_fixed32(BALL_RADIUS + BLOBBY_UPPER_RADIUS)
+#define FX_BALL_NET_RADIUS_SUM      float32_to_fixed32(BALL_RADIUS + NET_RADIUS)
+#define FX_BLOB_NET_RADIUS_SUM      float32_to_fixed32(BLOBBY_LOWER_RADIUS + NET_RADIUS)
+
+// Коэффициенты затухания
+#define FX_DAMP_095                 float32_to_fixed32(0.95f)
+#define FX_DAMP_057                 float32_to_fixed32(0.95f * 0.6f)
+#define FX_DAMP_07                  float32_to_fixed32(0.7f)
+#define FX_DAMP_09                  float32_to_fixed32(0.9f)
+
+// ── Вспомогательные функции (только fixed32) ──────────────────────────────────
+
+// Проверка перекрытия двух окружностей без деления и sqrt
+// Принимает уже вычисленные dx, dy и сумму радиусов — всё в fixed32
+static bool32 fx_circle_overlap(fixed32 dx, fixed32 dy, fixed32 radius_sum)
+{
+    int64 dx64 = dx;
+    int64 dy64 = dy;
+    int64 r64  = radius_sum;
+    return (dx64 * dx64 + dy64 * dy64) < (r64 * r64);
+}
+
+// Нормализация вектора в fixed32
+// Безопасно для векторов длиной до ~255 единиц (все игровые расстояния)
+static void fx_normalize(fixed32 x, fixed32 y, fixed32* out_nx, fixed32* out_ny)
+{
+    fixed32 len_sq = multiply_fixed32(x, x) + multiply_fixed32(y, y);
+    fixed32 len    = sqrt_fixed32(len_sq);
+    if (len == 0) { *out_nx = 0; *out_ny = 0; return; }
+    *out_nx = divide_fixed32(x, len);
+    *out_ny = divide_fixed32(y, len);
+}
+
+// Скалярное произведение в fixed32
+static fixed32 fx_dot(fixed32 ax, fixed32 ay, fixed32 bx, fixed32 by)
+{
+    return multiply_fixed32(ax, bx) + multiply_fixed32(ay, by);
+}
+
+static fixed32 fx_abs(fixed32 v) { return v < 0 ? -v : v; }
+
+// ── initialize_game_state ─────────────────────────────────────────────────────
+
 static void initialize_game_state(Game_state* state)
 {
     *state = (Game_state){ 0 };
 
-    state->paddle_position_x[0] = int32_to_fixed32(TABLE_CX);
-    state->paddle_position_y[0] = int32_to_fixed32(TABLE_TOP + TABLE_HEIGHT / 4);
+    // Блобы стоят на земле
+    state->player_position_x[0] = float32_to_fixed32(200.0f);
+    state->player_position_y[0] = float32_to_fixed32(GROUND_PLANE_HEIGHT);
+    state->player_position_x[1] = float32_to_fixed32(600.0f);
+    state->player_position_y[1] = float32_to_fixed32(GROUND_PLANE_HEIGHT);
 
-    state->paddle_position_x[1] = int32_to_fixed32(TABLE_CX);
-    state->paddle_position_y[1] = int32_to_fixed32(TABLE_TOP + TABLE_HEIGHT * 3 / 4);
-
-    state->puck_position_x = int32_to_fixed32(TABLE_CX);
-    state->puck_position_y = int32_to_fixed32(TABLE_CY);
-    state->puck_velocity_x = float32_to_fixed32(40.0f);
-    state->puck_velocity_y = float32_to_fixed32(60.0f);
-
-    state->tick = 0;
+    // Мяч — над левым блобом
+    state->ball_position_x = float32_to_fixed32(200.0f);
+    state->ball_position_y = float32_to_fixed32(STANDARD_BALL_HEIGHT);
 }
-
-static void reset_puck(Game_state* state, int32 scored_player)
-{
-    state->puck_position_x = int32_to_fixed32(TABLE_CX);
-    state->puck_position_y = int32_to_fixed32(TABLE_CY);
-
-    float32 dir = (scored_player == 0) ? -1.0f : 1.0f;
-    state->puck_velocity_x = float32_to_fixed32(30.0f);
-    state->puck_velocity_y = float32_to_fixed32(dir * 60.0f);
-}
-
-static void update_game_state(Game_state* state, Tick_input input, float32 delta_time)
-{
-    fixed32 dt_fixed = float32_to_fixed32(delta_time);
-
-    // ── 1. Paddle spring ──────────────────────────────────────────────────
-    for (int32 i = 0; i < MAX_PLAYERS; i += 1)
-    {
-        fixed32 target_x = input.player_inputs[i].cursor_x;
-        fixed32 target_y = input.player_inputs[i].cursor_y;
-
-        // Clamp X
-        if (target_x < int32_to_fixed32(PADDLE_MIN_X(PADDLE_RADIUS)))
-            target_x = int32_to_fixed32(PADDLE_MIN_X(PADDLE_RADIUS));
-        if (target_x > int32_to_fixed32(PADDLE_MAX_X(PADDLE_RADIUS)))
-            target_x = int32_to_fixed32(PADDLE_MAX_X(PADDLE_RADIUS));
-
-        // Clamp Y по половинам
-        if (i == 0)
-        {
-            if (target_y < int32_to_fixed32(PADDLE_0_MIN_Y(PADDLE_RADIUS)))
-                target_y = int32_to_fixed32(PADDLE_0_MIN_Y(PADDLE_RADIUS));
-            if (target_y > int32_to_fixed32(PADDLE_0_MAX_Y(PADDLE_RADIUS)))
-                target_y = int32_to_fixed32(PADDLE_0_MAX_Y(PADDLE_RADIUS));
-        }
-        else
-        {
-            if (target_y < int32_to_fixed32(PADDLE_1_MIN_Y(PADDLE_RADIUS)))
-                target_y = int32_to_fixed32(PADDLE_1_MIN_Y(PADDLE_RADIUS));
-            if (target_y > int32_to_fixed32(PADDLE_1_MAX_Y(PADDLE_RADIUS)))
-                target_y = int32_to_fixed32(PADDLE_1_MAX_Y(PADDLE_RADIUS));
-        }
-
-        fixed32 dx     = target_x - state->paddle_position_x[i];
-        fixed32 dy     = target_y - state->paddle_position_y[i];
-        fixed32 spring = float32_to_fixed32(PADDLE_SPRING);
-
-        state->paddle_velocity_x[i] += multiply_fixed32(multiply_fixed32(spring, dx), dt_fixed);
-        state->paddle_velocity_y[i] += multiply_fixed32(multiply_fixed32(spring, dy), dt_fixed);
-
-        fixed32 damping = float32_to_fixed32(PADDLE_DAMPING);
-        state->paddle_velocity_x[i] = multiply_fixed32(state->paddle_velocity_x[i], damping);
-        state->paddle_velocity_y[i] = multiply_fixed32(state->paddle_velocity_y[i], damping);
-
-        state->paddle_position_x[i] += multiply_fixed32(state->paddle_velocity_x[i], dt_fixed);
-        state->paddle_position_y[i] += multiply_fixed32(state->paddle_velocity_y[i], dt_fixed);
-    }
-
-    // ── 2. Puck movement ──────────────────────────────────────────────────
-    state->puck_position_x += multiply_fixed32(state->puck_velocity_x, dt_fixed);
-    state->puck_position_y += multiply_fixed32(state->puck_velocity_y, dt_fixed);
-
-    state->puck_velocity_x = multiply_fixed32(state->puck_velocity_x, float32_to_fixed32(PUCK_FRICTION));
-    state->puck_velocity_y = multiply_fixed32(state->puck_velocity_y, float32_to_fixed32(PUCK_FRICTION));
-
-    // ── 3. Wall & goal collisions ─────────────────────────────────────────
-
-    // Левая / правая
-    if (state->puck_position_x < int32_to_fixed32(TABLE_LEFT + PUCK_RADIUS))
-    {
-        state->puck_position_x = int32_to_fixed32(TABLE_LEFT + PUCK_RADIUS);
-        state->puck_velocity_x = -state->puck_velocity_x;
-    }
-    if (state->puck_position_x > int32_to_fixed32(TABLE_RIGHT - PUCK_RADIUS))
-    {
-        state->puck_position_x = int32_to_fixed32(TABLE_RIGHT - PUCK_RADIUS);
-        state->puck_velocity_x = -state->puck_velocity_x;
-    }
-
-    // Верхняя стена / ворота p0
-    if (state->puck_position_y < int32_to_fixed32(TABLE_TOP + PUCK_RADIUS))
-    {
-        int32 px = fixed32_to_int32(state->puck_position_x);
-        if (px > GOAL_LEFT && px < GOAL_RIGHT)
-        {
-            state->score[1] += 1;
-            reset_puck(state, 0);
-        }
-        else
-        {
-            state->puck_position_y = int32_to_fixed32(TABLE_TOP + PUCK_RADIUS);
-            state->puck_velocity_y = -state->puck_velocity_y;
-        }
-    }
-
-    // Нижняя стена / ворота p1
-    if (state->puck_position_y > int32_to_fixed32(TABLE_BOTTOM - PUCK_RADIUS))
-    {
-        int32 px = fixed32_to_int32(state->puck_position_x);
-        if (px > GOAL_LEFT && px < GOAL_RIGHT)
-        {
-            state->score[0] += 1;
-            reset_puck(state, 1);
-        }
-        else
-        {
-            state->puck_position_y = int32_to_fixed32(TABLE_BOTTOM - PUCK_RADIUS);
-            state->puck_velocity_y = -state->puck_velocity_y;
-        }
-    }
-
-    // ── 4. Paddle–puck collision ──────────────────────────────────────────
-    for (int32 i = 0; i < MAX_PLAYERS; i += 1)
-    {
-        float32 fdx      = fixed32_to_float32(state->puck_position_x - state->paddle_position_x[i]);
-        float32 fdy      = fixed32_to_float32(state->puck_position_y - state->paddle_position_y[i]);
-        float32 dist2    = fdx * fdx + fdy * fdy;
-        float32 min_dist = (float32)(PADDLE_RADIUS + PUCK_RADIUS);
-
-        if (dist2 < min_dist * min_dist && dist2 > 0.0001f)
-        {
-            float32 dist = square_root(dist2);
-            float32 nx   = fdx / dist;
-            float32 ny   = fdy / dist;
-
-            float32 overlap = min_dist - dist;
-            state->puck_position_x += float32_to_fixed32(nx * overlap);
-            state->puck_position_y += float32_to_fixed32(ny * overlap);
-
-            float32 rel_vx = fixed32_to_float32(state->puck_velocity_x - state->paddle_velocity_x[i]);
-            float32 rel_vy = fixed32_to_float32(state->puck_velocity_y - state->paddle_velocity_y[i]);
-            float32 dot    = rel_vx * nx + rel_vy * ny;
-
-            if (dot < 0.0f)
-            {
-                float32 j = (1.0f + PADDLE_RESTITUTION) * dot;
-                state->puck_velocity_x -= float32_to_fixed32(j * nx);
-                state->puck_velocity_y -= float32_to_fixed32(j * ny);
-
-                state->puck_velocity_x += multiply_fixed32(state->paddle_velocity_x[i],
-                                              float32_to_fixed32(PADDLE_IMPULSE_SCALE));
-                state->puck_velocity_y += multiply_fixed32(state->paddle_velocity_y[i],
-                                              float32_to_fixed32(PADDLE_IMPULSE_SCALE));
-
-                float32 pvx    = fixed32_to_float32(state->puck_velocity_x);
-                float32 pvy    = fixed32_to_float32(state->puck_velocity_y);
-                float32 speed2 = pvx * pvx + pvy * pvy;
-                if (speed2 > PUCK_MAX_SPEED * PUCK_MAX_SPEED)
-                {
-                    float32 inv = PUCK_MAX_SPEED / square_root(speed2);
-                    state->puck_velocity_x = float32_to_fixed32(pvx * inv);
-                    state->puck_velocity_y = float32_to_fixed32(pvy * inv);
-                }
-            }
-        }
-    }
-
-    state->tick += 1;
-}
+// ── deinitialize_game_state ───────────────────────────────────────────────────
 
 static void deinitialize_game_state(Game_state* state)
 {
 
+}
+
+// ── update_game_state ─────────────────────────────────────────────────────────
+
+static void update_game_state(Game_state* state, Tick_input input, float32 delta_time)
+{
+    (void)delta_time; // Физика откалибрована под фиксированный шаг
+
+    // ── 1. Блобы ──────────────────────────────────────────────────────────────
+    for (int32 i = 0; i < MAX_PLAYERS; i += 1)
+    {
+        fixed32 pos_x = state->player_position_x[i];
+        fixed32 pos_y = state->player_position_y[i];
+        fixed32 vel_x = state->player_velocity_x[i];
+        fixed32 vel_y = state->player_velocity_y[i];
+
+        bool32 key_left  = input.player_inputs[i].left;
+        bool32 key_right = input.player_inputs[i].right;
+        bool32 key_up    = input.player_inputs[i].up;
+
+        fixed32 cur_grav = FX_GRAVITATION;
+        if (key_up)
+        {
+            if (pos_y <= FX_GROUND_PLANE_HEIGHT)
+                vel_y = FX_BLOBBY_JUMP_ACCELERATION;
+
+            // FX_BLOBBY_JUMP_BUFFER = GRAVITATION/2 < 0
+            // cur_grav -= отрицательное → гравитация слабее при прыжке
+            cur_grav -= FX_BLOBBY_JUMP_BUFFER;
+        }
+
+        // Горизонтальная скорость
+        vel_x = (int32_to_fixed32(key_right) - int32_to_fixed32(key_left));
+        vel_x = multiply_fixed32(vel_x, FX_BLOBBY_SPEED);
+
+        // Интеграция: pos += 0.5 * grav + vel;  vel += grav
+        pos_x += vel_x;
+        pos_y += multiply_fixed32(FX_HALF, cur_grav) + vel_y;
+        vel_y += cur_grav;
+
+        // Приземление
+        if (pos_y < FX_GROUND_PLANE_HEIGHT)
+        {
+            pos_y = FX_GROUND_PLANE_HEIGHT;
+            vel_y = FX_ZERO;
+        }
+
+        state->player_position_x[i] = pos_x;
+        state->player_position_y[i] = pos_y;
+        state->player_velocity_x[i] = vel_x;
+        state->player_velocity_y[i] = vel_y;
+    }
+
+    // ── 2. Движение мяча ──────────────────────────────────────────────────────
+    fixed32 ball_pos_x = state->ball_position_x;
+    fixed32 ball_pos_y = state->ball_position_y;
+    fixed32 ball_vel_x = state->ball_velocity_x;
+    fixed32 ball_vel_y = state->ball_velocity_y;
+
+    ball_pos_x += ball_vel_x;
+    ball_pos_y += multiply_fixed32(FX_HALF, FX_BALL_GRAVITATION) + ball_vel_y;
+    ball_vel_y += FX_BALL_GRAVITATION;
+
+    // ── 3. Столкновение мяча с блобами ────────────────────────────────────────
+    for (int32 i = 0; i < MAX_PLAYERS; i += 1)
+    {
+        fixed32 blob_pos_x = state->player_position_x[i];
+        fixed32 blob_pos_y = state->player_position_y[i];
+
+        fixed32 col_cx = blob_pos_x;
+        fixed32 col_cy = blob_pos_y;
+        bool32  collide = 0;
+
+        // Нижняя сфера блоба (в Y-up: ниже центра → меньший Y)
+        {
+            fixed32 sx = blob_pos_x;
+            fixed32 sy = blob_pos_y - FX_BLOBBY_LOWER_SPHERE;
+            fixed32 dx = ball_pos_x - sx;
+            fixed32 dy = ball_pos_y - sy;
+            if (fx_circle_overlap(dx, dy, FX_BALL_LOWER_RADIUS_SUM))
+            {
+                col_cy  = blob_pos_y - FX_BLOBBY_LOWER_SPHERE;
+                collide = 1;
+            }
+        }
+        // Верхняя сфера блоба (в Y-up: выше центра → больший Y)
+        if (!collide)
+        {
+            fixed32 sx = blob_pos_x;
+            fixed32 sy = blob_pos_y + FX_BLOBBY_UPPER_SPHERE;
+            fixed32 dx = ball_pos_x - sx;
+            fixed32 dy = ball_pos_y - sy;
+            if (fx_circle_overlap(dx, dy, FX_BALL_UPPER_RADIUS_SUM))
+            {
+                col_cy  = blob_pos_y + FX_BLOBBY_UPPER_SPHERE;
+                collide = 1;
+            }
+        }
+
+        if (collide)
+        {
+            fixed32 nx, ny;
+            fx_normalize(ball_pos_x - col_cx, ball_pos_y - col_cy, &nx, &ny);
+
+            ball_vel_x  = multiply_fixed32(nx, FX_BALL_COLLISION_VELOCITY);
+            ball_vel_y  = multiply_fixed32(ny, FX_BALL_COLLISION_VELOCITY);
+            ball_pos_x += ball_vel_x;
+            ball_pos_y += ball_vel_y;
+        }
+    }
+
+    // ── 4. Столкновение мяча с миром ──────────────────────────────────────────
+
+    // Земля (низкий Y) — очко
+    if (ball_pos_y - FX_BALL_RADIUS < FX_ZERO)
+    {
+        ball_vel_y  = -ball_vel_y;
+        ball_vel_x  = multiply_fixed32(ball_vel_x, FX_DAMP_057);
+        ball_vel_y  = multiply_fixed32(ball_vel_y, FX_DAMP_057);
+        ball_pos_y  = FX_BALL_RADIUS;
+
+        int32 scorer = (ball_pos_x < FX_NET_POSITION_X) ? 1 : 0;
+        state->score[scorer] += 1;
+
+        ball_pos_x = (scorer == 0) ? FX_BALL_RESET_RIGHT : FX_BALL_RESET_LEFT;
+        ball_pos_y = FX_STANDARD_BALL_HEIGHT;
+        ball_vel_x = FX_ZERO;
+        ball_vel_y = FX_ZERO;
+    }
+
+    // Левая стена
+    if (ball_pos_x - FX_BALL_RADIUS <= FX_LEFT_PLANE && ball_vel_x < FX_ZERO)
+    {
+        ball_vel_x = -ball_vel_x;
+        ball_pos_x = FX_LEFT_PLANE + FX_BALL_RADIUS;
+    }
+    // Правая стена
+    else if (ball_pos_x + FX_BALL_RADIUS >= FX_RIGHT_PLANE && ball_vel_x > FX_ZERO)
+    {
+        ball_vel_x = -ball_vel_x;
+        ball_pos_x = FX_RIGHT_PLANE - FX_BALL_RADIUS;
+    }
+    // Столб сетки (мяч ниже вершины: ball_pos_y < NET_SPHERE_POSITION)
+    else if (ball_pos_y < FX_NET_SPHERE_POSITION &&
+             fx_abs(ball_pos_x - FX_NET_POSITION_X) < FX_BALL_NET_RADIUS_SUM)
+    {
+        bool32 right = ball_pos_x > FX_NET_POSITION_X;
+        ball_vel_x   = -ball_vel_x;
+        ball_pos_x   = FX_NET_POSITION_X +
+                       (right ? FX_BALL_NET_RADIUS_SUM : -FX_BALL_NET_RADIUS_SUM);
+    }
+    else
+    {
+        // Сфера вершины сетки
+        fixed32 dx   = ball_pos_x - FX_NET_POSITION_X;
+        fixed32 dy   = ball_pos_y - FX_NET_SPHERE_POSITION;
+        if (fx_circle_overlap(dx, dy, FX_BALL_NET_RADIUS_SUM))
+        {
+            fixed32 nx, ny;
+            fx_normalize(dx, dy, &nx, &ny);
+
+            // Кинетическая энергия: нормальная и параллельная компоненты
+            fixed32 perp_dot  = fx_dot(nx, ny, ball_vel_x, ball_vel_y);
+            fixed32 perp_ekin = multiply_fixed32(perp_dot, perp_dot);
+            fixed32 speed_sq  = multiply_fixed32(ball_vel_x, ball_vel_x)
+                              + multiply_fixed32(ball_vel_y, ball_vel_y);
+            fixed32 para_ekin = speed_sq - perp_ekin;
+
+            // Нормальная компонента гасится сильнее (0.7 vs 0.9 по энергии)
+            perp_ekin = multiply_fixed32(perp_ekin, FX_DAMP_07);
+            para_ekin = multiply_fixed32(para_ekin, FX_DAMP_09);
+
+            fixed32 new_speed = sqrt_fixed32(perp_ekin + para_ekin);
+
+            // Отражение: v' = v - 2*(v·n)*n
+            fixed32 dot2  = multiply_fixed32(FX_TWO, perp_dot);
+            fixed32 ref_x = ball_vel_x - multiply_fixed32(nx, dot2);
+            fixed32 ref_y = ball_vel_y - multiply_fixed32(ny, dot2);
+
+            fixed32 rnx, rny;
+            fx_normalize(ref_x, ref_y, &rnx, &rny);
+            ball_vel_x = multiply_fixed32(rnx, new_speed);
+            ball_vel_y = multiply_fixed32(rny, new_speed);
+
+            // Выталкиваем мяч из сферы
+            ball_pos_x = FX_NET_POSITION_X   + multiply_fixed32(nx, FX_BALL_NET_RADIUS_SUM);
+            ball_pos_y = FX_NET_SPHERE_POSITION + multiply_fixed32(ny, FX_BALL_NET_RADIUS_SUM);
+        }
+    }
+
+    // ── 5. Ограничения блобов (сетка и стены) ────────────────────────────────
+    {
+        fixed32 p0x = state->player_position_x[0];
+        fixed32 p1x = state->player_position_x[1];
+
+        // Блоб 0 не переходит за сетку вправо
+        if (p0x + FX_BLOBBY_LOWER_RADIUS > FX_NET_POSITION_X - FX_NET_RADIUS)
+            p0x = FX_NET_POSITION_X - FX_NET_RADIUS - FX_BLOBBY_LOWER_RADIUS;
+        // Блоб 1 не переходит за сетку влево
+        if (p1x - FX_BLOBBY_LOWER_RADIUS < FX_NET_POSITION_X + FX_NET_RADIUS)
+            p1x = FX_NET_POSITION_X + FX_NET_RADIUS + FX_BLOBBY_LOWER_RADIUS;
+        // Стены
+        if (p0x < FX_LEFT_PLANE)   p0x = FX_LEFT_PLANE;
+        if (p1x > FX_RIGHT_PLANE)  p1x = FX_RIGHT_PLANE;
+
+        state->player_position_x[0] = p0x;
+        state->player_position_x[1] = p1x;
+    }
+
+    // ── 6. Записываем мяч ────────────────────────────────────────────────────
+    state->ball_position_x = ball_pos_x;
+    state->ball_position_y = ball_pos_y;
+    state->ball_velocity_x = ball_vel_x;
+    state->ball_velocity_y = ball_vel_y;
+
+    state->tick += 1;
 }

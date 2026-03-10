@@ -111,18 +111,21 @@ LRESULT CALLBACK window_procedure(HWND   window,
             int32 scale_x = client_width / game_horizontal_resoultion;
             int32 scale_y = client_height / game_vertical_resolution;
 
-            int32 scale = 0;
-            if (scale_x < scale_y)
-            {
-                scale = scale_x;
-            }
-            else
+            int32 scale = scale_x;
+            if (scale_y < scale_x)
             {
                 scale = scale_y;
             }
 
+            if (scale < 1)
+            {
+                scale = 1;
+            }
+
             int32 present_width = game_horizontal_resoultion * scale;
+            if (present_width > client_width) present_width = client_width;
             int32 present_height = game_vertical_resolution * scale;
+            if (present_height > client_height) present_height = client_height;
 
             int32 present_min_x = (client_width - present_width) / 2;
             int32 present_max_x = (client_width + present_width) / 2;
@@ -298,14 +301,15 @@ void process_window_messages()
                 int32 scale_x = client_width / game_horizontal_resoultion;
                 int32 scale_y = client_height / game_vertical_resolution;
 
-                int32 scale = 0;
-                if (scale_x < scale_y)
-                {
-                    scale = scale_x;
-                }
-                else
+                int32 scale = scale_x;
+                if (scale_y < scale_x)
                 {
                     scale = scale_y;
+                }
+
+                if (scale < 1)
+                {
+                    scale = 1;
                 }
 
                 int32 present_width = game_horizontal_resoultion * scale;
@@ -401,8 +405,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (!instance)
         ExitProcess(1);
 
-    if (!AllocConsole())
-        ExitProcess(1);
+    // if (!AllocConsole())
+    //     ExitProcess(1);
 
     if (!initialize_xaudio2())
        ExitProcess(1);
@@ -442,7 +446,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     WaitForSingleObject(thread_handle, INFINITE);
     CloseHandle(thread_handle);
 
-    // destroy_xaudio2();
+    destroy_xaudio2();
+
     WSACleanup();
 
     ReleaseDC(window, device_context);

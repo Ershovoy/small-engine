@@ -483,7 +483,7 @@ typedef struct WSAData
     WORD           wHighVersion;
     unsigned short iMaxSockets;
     unsigned short iMaxUdpDg;
-    char           lpVendorInfo;
+    char*          lpVendorInfo;
     char           szDescription[WSADESCRIPTION_LEN + 1];
     char           szSystemStatus[WSASYS_STATUS_LEN + 1];
 } WSADATA;

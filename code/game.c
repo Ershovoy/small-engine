@@ -14,11 +14,11 @@
 static bool32 initialize_game()
 {
     Arena arena = { 0 };
-    arena_initialize(&arena, MEGABYTES(32));
+    arena_initialize(&arena, MEGABYTES(256));
     game = arena_allocate(&arena, sizeof(Game));
 
     Image image = { 0 };
-    image.size = GAME_MAX_HORIZONTAL_RESOLUTION * GAME_MAX_VERTICAL_RESOLUTION;
+    image.size = GAME_MAX_HORIZONTAL_RESOLUTION * GAME_MAX_VERTICAL_RESOLUTION * 32;
     image.memory = arena_allocate(&arena, image.size);
     image.width = GAME_MAX_HORIZONTAL_RESOLUTION;
     image.height = GAME_MAX_VERTICAL_RESOLUTION;
@@ -40,6 +40,11 @@ static bool32 initialize_game()
     void* buffer = arena_allocate(&arena, file_size);
     game->test_sound = read_sound_file(file_name, lengthof(file_name), buffer);
 
+    char8 image_file_name[] = "font.bmp";
+    int64 image_file_size = get_file_size(image_file_name, lengthof(image_file_name));
+    void* image_buffer = arena_allocate(&arena, image_file_size);
+    game->test_image = load_bitmap(image_file_name, lengthof(image_file_name), image_buffer);
+
     game->is_offline = 1;
 
     initialize_game_state(&game->state);
@@ -55,23 +60,52 @@ static void deinitialize_game()
 static Player_input collect_player_input()
 {
     Player_input player_input = { 0 };
-    player_input.cursor_x = float32_to_fixed32(input.mouse.x);
-    player_input.cursor_y = float32_to_fixed32(input.mouse.y);
 
     if (is_button_pressed(KEY_E))
     {
         play_sound(game->test_sound);
     }
 
+    if (is_button_down(KEY_W))
+    {
+        player_input.up = 1;
+    }
+    if (is_button_down(KEY_A))
+    {
+        player_input.left = 1;
+    }
+    if (is_button_down(KEY_D))
+    {
+        player_input.right = 1;
+    }
+
     if (is_button_pressed(BUTTON_WHEEL_UP))
     {
-        game->offscreen.width -= 2;
-        game->offscreen.height -= 2;
+        game->offscreen.width -= 10;
+        game->offscreen.height -= 10;
     }
     if (is_button_pressed(BUTTON_WHEEL_DOWN))
     {
-        game->offscreen.width += 2;
-        game->offscreen.height += 2;
+        game->offscreen.width += 10;
+        game->offscreen.height += 10;
+    }
+
+    if (game->offscreen.width > GAME_MAX_HORIZONTAL_RESOLUTION)
+    {
+        game->offscreen.width = GAME_MAX_HORIZONTAL_RESOLUTION;
+    }
+    if (game->offscreen.width < GAME_MIN_HORIZONTAL_RESOLUTION)
+    {
+        game->offscreen.width = GAME_MIN_HORIZONTAL_RESOLUTION;
+    }
+
+    if (game->offscreen.height > GAME_MAX_VERTICAL_RESOLUTION)
+    {
+        game->offscreen.height = GAME_MAX_VERTICAL_RESOLUTION;
+    }
+    if (game->offscreen.height < GAME_MIN_VERTICAL_RESOLUTION)
+    {
+        game->offscreen.height = GAME_MIN_VERTICAL_RESOLUTION;
     }
 
     return player_input;
@@ -186,7 +220,7 @@ static void server()
             Packet_disconnect packet_disconnect = { 0 };
             packet_disconnect.header.type = PACKET_DISCONNECT;
 
-            if (game->is_connected[i] && game->last_packet_time[i] + game->time_per_update * 600 < game->current_time)
+            if (game->is_connected[i] && game->last_packet_time[i] + game->time_per_update * MAX_BUFFERED_TICKS < game->current_time)
             {
                 net_send(&packet_disconnect, sizeof(Packet_disconnect), game->ips[i], game->ports[i]);
 
@@ -212,7 +246,8 @@ static void server()
             // packet_tick_input.header.type = PACKET_TICK_INPUT;
             // packet_tick_input.tick_input = tick_input;
 
-            if (game->is_connected[i] && tick_input.tick % 32 != 0)
+            // if (game->is_connected[i] && (tick_input.tick % 32) > 16)
+            if (game->is_connected[i])
             {
                 net_send(&packet_tick_input_batch, sizeof(Packet_tick_input_batch), game->ips[i], game->ports[i]);
                 // net_send(&packet_tick_input, sizeof(Packet_tick_input), game->ips[i], game->ports[i]);
@@ -320,11 +355,11 @@ static void client()
     if (buffered_ticks > MAX_BUFFERED_TICKS / 8)
     {
         time_scale = 2;
-
     }
     if (buffered_ticks == MAX_BUFFERED_TICKS)
     {
-        *(int32*)0 = 0;
+        // *(int32*)0 = 0;
+        time_scale = 0;
     }
 
     game->update_accumulator += delta_time * time_scale;
@@ -367,7 +402,7 @@ static void client()
     game->frame_accumulator += delta_time;
     if (game->frame_accumulator >= game->time_per_frame)
     {
-        update_game_state(&game->previous_state, game->previous_tick_input, (game->current_time - game->previous_frame_time) / 1'000'000'000.0f);
+        //update_game_state(&game->previous_state, game->previous_tick_input, (game->current_time - game->previous_frame_time) / 1'000'000'000.0f);
         render_game_state(&game->previous_state);
 
         game->previous_frame_time = game->current_time;
@@ -375,7 +410,6 @@ static void client()
     }
 
     game->previous_time = game->current_time;
-
 }
 
 static void offline()
@@ -524,4 +558,6 @@ static void game_loop()
     {
         offline();
     }
+
+    sleep(1'000);
 }

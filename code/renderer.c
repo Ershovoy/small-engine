@@ -3,6 +3,11 @@
 
 // }
 
+static void draw_text(char8* data, int64 length)
+{
+
+}
+
 static void clear(uint8 red, uint8 green, uint8 blue)
 {
     uint32* image_row = game->offscreen.image.memory;
@@ -74,6 +79,7 @@ static void draw_vertical_line(uint8 red, uint8 green, uint8 blue, float32 x)
 
 static void draw_circle(uint8 red, uint8 green, uint8 blue, float32 x, float32 y, float32 radius)
 {
+    y += 100;
     int32 left = round_float32_to_int32(x - radius);
     int32 bottom = round_float32_to_int32(y - radius);
     int32 right = round_float32_to_int32(x + radius);
@@ -110,132 +116,80 @@ static void draw_circle(uint8 red, uint8 green, uint8 blue, float32 x, float32 y
     }
 }
 
-static Image load_bitmap(char8* file_name, int64 file_name_length)
+static Image load_bitmap(char8* file_name, int64 file_name_length, void* buffer)
 {
     Image result = { 0 };
 
     int64 file_size = get_file_size(file_name, file_name_length);
-    void* file_memory = 0;
-    if (read_file(file_name, file_size, file_memory))
+    if (read_file(file_name, file_name_length, buffer))
     {
-        Bitmap_header bitmap_header = {0};
+        Bitmap_file_header bitmap_file_header = { 0 };
 
-        bitmap_header.bitmap_offset = *(uint32*)((char8*)file_memory + 10);
-        bitmap_header.bitmap_width = *(int32*)((char8*)file_memory + 18);
-        bitmap_header.bitmap_height = *(int32*)((char8*)file_memory + 22);
-        bitmap_header.bitmap_size = *(uint32*)((char8*)file_memory + 34);
+        bitmap_file_header.bitmap_offset = *(uint32*)((char8*)buffer + 10);
+        bitmap_file_header.bitmap_width = *(int32*)((char8*)buffer + 18);
+        bitmap_file_header.bitmap_height = *(int32*)((char8*)buffer + 22);
+        bitmap_file_header.bitmap_size = *(uint32*)((char8*)buffer + 34);
 
-        result.memory = (void*)((char8*)file_memory + bitmap_header.bitmap_offset);
-        result.size = bitmap_header.bitmap_size;
-        result.width = bitmap_header.bitmap_width;
-        result.height = bitmap_header.bitmap_height;
+        result.memory = (uint32*)((char8*)buffer + bitmap_file_header.bitmap_offset);
+        result.size = bitmap_file_header.bitmap_size;
+        result.width = bitmap_file_header.bitmap_width;
+        result.height = bitmap_file_header.bitmap_height;
     }
 
     return result;
 }
 
-// static void render_bitmap(Image bitmap, vec2 position)
-// {
-//     int32 position_x = round_float32_to_int32(position.x + translate.x + GAME_RESOLUTION / 2 + camera.offset.x);
-//     int32 position_y = round_float32_to_int32(position.y + translate.y + GAME_RESOLUTION / 2 - camera.offset.y);
+static void render_bitmap(Image bitmap, float32 xx, float32 yy)
+{
+    int32 position_x = round_float32_to_int32(xx);
+    int32 position_y = round_float32_to_int32(yy);
 
-//     int32 min_x = position_x - bitmap.width / 2;
-//     int32 min_y = position_y - bitmap.height / 2;
-//     int32 max_x = position_x + bitmap.width / 2;
-//     int32 max_y = position_y + bitmap.height / 2;
+    int32 min_x = position_x - bitmap.width / 2;
+    int32 min_y = position_y - bitmap.height / 2;
+    int32 max_x = position_x + bitmap.width / 2;
+    int32 max_y = position_y + bitmap.height / 2;
 
-//     int32 bitmap_offset_x = 0;
-//     int32 bitmap_offset_y = 0;
+    int32 bitmap_offset_x = 0;
+    int32 bitmap_offset_y = 0;
 
-//     if (min_x < 0)
-//     {
-//         bitmap_offset_x = -min_x;
-//         min_x = 0;
-//         //bitmap_offset_x = -(position_x - bitmap.width / 2);
-//     }
-//     if (min_y < 0)
-//     {
-//         bitmap_offset_y = -min_y;
-//         min_y = 0;
-//         //bitmap_offset_y = -(position_y - bitmap.height / 2);
-//     }
-//     if (max_x > offscreen.width)
-//     {
-//         max_x = offscreen.width;
-//     }
-//     if (max_y > offscreen.height)
-//     {
-//         max_y = offscreen.height;
-//     }
+    if (min_x < 0)
+    {
+        bitmap_offset_x = -min_x;
+        min_x = 0;
+        //bitmap_offset_x = -(position_x - bitmap.width / 2);
+    }
+    if (min_y < 0)
+    {
+        bitmap_offset_y = -min_y;
+        min_y = 0;
+        //bitmap_offset_y = -(position_y - bitmap.height / 2);
+    }
+    if (max_x > game->offscreen.width)
+    {
+        max_x = game->offscreen.width;
+    }
+    if (max_y > game->offscreen.height)
+    {
+        max_y = game->offscreen.height;
+    }
 
-//     uint32* offscreen_row = (uint32*)offscreen.memory + min_y * offscreen.width + min_x;
-//     uint32* bitmap_row = (uint32*)bitmap.memory + bitmap_offset_y * bitmap.width + bitmap_offset_x;
-//     for (int32 y = min_y; y < max_y; y += 1)
-//     {
-//         uint32* offscreen_pixel = offscreen_row;
-//         uint32* bitmap_pixel = bitmap_row;
-//         for (int32 x = min_x; x < max_x; x += 1)
-//         {
-//             if (*bitmap_pixel & 0xFF000000)
-//             {
-//                 *offscreen_pixel = *bitmap_pixel;
-//             }
+    uint32* offscreen_row = (uint32*)game->offscreen.image.memory + min_y * game->offscreen.width + min_x;
+    uint32* bitmap_row = (uint32*)bitmap.memory + bitmap_offset_y * bitmap.width + bitmap_offset_x;
+    for (int32 y = min_y; y < max_y; y += 1)
+    {
+        uint32* offscreen_pixel = offscreen_row;
+        uint32* bitmap_pixel = bitmap_row;
+        for (int32 x = min_x; x < max_x; x += 1)
+        {
+            if (*bitmap_pixel & 0xFF000000)
+            {
+                *offscreen_pixel = *bitmap_pixel;
+            }
 
-//             offscreen_pixel += 1;
-//             bitmap_pixel += 1;
-//         }
-//         offscreen_row += offscreen.width;
-//         bitmap_row += bitmap.width;
-//     }
-// }
-
-// static void draw_circle(Color color, Vec2 position, float32 radius)
-// {
-//     int32 left = round_float32_to_int32(position.e1 - radius);
-//     int32 bottom = round_float32_to_int32(position.e2 - radius);
-//     int32 right = round_float32_to_int32(position.e1 + radius);
-//     int32 top = round_float32_to_int32(position.e2 + radius);
-
-//     if (left < 0)
-//     {
-//         left = 0;
-//     }
-//     if (bottom < 0)
-//     {
-//         bottom = 0;
-//     }
-//     if(right > offscreen_view.width)
-//     {
-//         right = offscreen_view.width;
-//     }
-//     if(top > offscreen_view.height)
-//     {
-//         top = offscreen_view.height;
-//     }
-
-//     for (int32 y = bottom; y < top; y += 1)
-//     {
-//         for (int32 x = left; x < right; x += 1)
-//         {
-//             float32 distance_x = (x - position.e1 + 0.5f);
-//             float32 distance_y = (y - position.e2 + 0.5f);
-//             float32 distance = square_root(distance_x * distance_x + distance_y * distance_y);
-
-//             if(distance < radius)
-//             {
-//                 float32 alpha = (radius - distance) / 2.0f;
-//                 if(alpha > 1.0f)
-//                 {
-//                     alpha = 1.0f;
-//                 }
-//                 Color color2 = *(Color*)&offscreen_view.image->memory[y * offscreen_view.width + x];
-//                 Color blended = { 0 };
-//                 blended.red = (uint8)round_float32_to_int32(color.red * alpha + color2.red * (1.0f - alpha));
-//                 blended.green = (uint8)round_float32_to_int32(color.green * alpha + color2.green * (1.0f - alpha));
-//                 blended.blue = (uint8)round_float32_to_int32(color.blue * alpha + color2.blue * (1.0f - alpha));
-
-//                 offscreen_view.image->memory[y * offscreen_view.width + x] = *(uint32*)&blended;
-//             }
-//         }
-//     }
-// }
+            offscreen_pixel += 1;
+            bitmap_pixel += 1;
+        }
+        offscreen_row += game->offscreen.width;
+        bitmap_row += bitmap.width;
+    }
+}

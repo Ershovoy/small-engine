@@ -1,109 +1,61 @@
 static void render_game_state(Game_state* state)
 {
-    // ── 1. Background & table ─────────────────────────────────────────────
-    clear(15, 15, 20);
-    draw_rectangle(22, 28, 38, TABLE_LEFT, TABLE_TOP, TABLE_RIGHT, TABLE_BOTTOM);
+    // ── Background ────────────────────────────────────────────────────────────
+    Color sky = { 0 };
+    sky.red   = 80;
+    sky.green = 140;
+    sky.blue  = 200;
+    clear(sky.red, sky.green, sky.blue);
 
-    // ── 2. Center markings ────────────────────────────────────────────────
-    draw_horizontal_line(55, 65, 80, (float32)TABLE_CY);
-    draw_circle(55, 65, 80, (float32)TABLE_CX, (float32)TABLE_CY, 14.0f);
-    draw_circle(180, 190, 200, (float32)TABLE_CX, (float32)TABLE_CY, 3.0f);
+    // ── Земля (горизонтальные полосы у основания) ─────────────────────────────
+    float32 ground_top = GROUND_PLANE_HEIGHT + BLOBBY_HEIGHT / 2.0f;
+    draw_rectangle(34, 139, 34, 0, 90, 800, (int32)100);
 
-    // ── 3. Walls & goals ──────────────────────────────────────────────────
-    // Левая / правая
-    draw_rectangle(70, 80, 100, TABLE_LEFT,     TABLE_TOP, TABLE_LEFT + 2,  TABLE_BOTTOM);
-    draw_rectangle(70, 80, 100, TABLE_RIGHT - 2, TABLE_TOP, TABLE_RIGHT,    TABLE_BOTTOM);
-
-    // Верхняя стена
-    draw_rectangle(70, 80, 100, TABLE_LEFT, TABLE_TOP, GOAL_LEFT,  TABLE_TOP + 2);
-    draw_rectangle(70, 80, 100, GOAL_RIGHT, TABLE_TOP, TABLE_RIGHT, TABLE_TOP + 2);
-    draw_rectangle(180, 80, 80, GOAL_LEFT,  TABLE_TOP, GOAL_RIGHT,  TABLE_TOP + 2);
-
-    // Нижняя стена
-    draw_rectangle(70, 80, 100, TABLE_LEFT, TABLE_BOTTOM - 2, GOAL_LEFT,   TABLE_BOTTOM);
-    draw_rectangle(70, 80, 100, GOAL_RIGHT, TABLE_BOTTOM - 2, TABLE_RIGHT, TABLE_BOTTOM);
-    draw_rectangle(80, 80, 180, GOAL_LEFT,  TABLE_BOTTOM - 2, GOAL_RIGHT,  TABLE_BOTTOM);
-
-    // ── 4. Score ──────────────────────────────────────────────────────────
-    static const uint16 digit_segments[10] =
+    // ── Сетка: столб снизу вверх до NET_SPHERE_POSITION ──────────────────────
+    for (float32 y = 0.0f; y <= NET_SPHERE_POSITION; y += 25.0f)
     {
-        0b111101101101111,
-        0b010010010010010,
-        0b111001111100111,
-        0b111001111001111,
-        0b101101111001001,
-        0b111100111001111,
-        0b111100111101111,
-        0b111001001001001,
-        0b111101111101111,
-        0b111101111001111,
-    };
+        draw_circle(200, 200, 200, NET_POSITION_X, y, NET_RADIUS);
+    }
+    // Сфера вершины сетки
+    draw_circle(220, 220, 220, NET_POSITION_X, NET_SPHERE_POSITION, NET_RADIUS * 1.5f);
 
-    #define DRAW_DIGIT(digit, px, py, r, g, b)                           \
-    do {                                                                   \
-        uint16 _bits = digit_segments[(digit) % 10];                      \
-        for (int32 _row = 0; _row < 5; _row += 1)                         \
-        {                                                                  \
-            for (int32 _col = 0; _col < 3; _col += 1)                     \
-            {                                                              \
-                if (_bits & (1 << ((4 - _row) * 3 + (2 - _col))))         \
-                {                                                          \
-                    draw_rectangle((r), (g), (b),                         \
-                        (px) + _col * 2, (py) + _row * 2,                 \
-                        (px) + _col * 2 + 2, (py) + _row * 2 + 2);       \
-                }                                                          \
-            }                                                              \
-        }                                                                  \
-    } while(0)
+    // ── Блобы ─────────────────────────────────────────────────────────────────
+    for (int32 i = 0; i < MAX_PLAYERS; i += 1)
+    {
+        float32 px = fixed32_to_float32(state->player_position_x[i]);
+        float32 py = fixed32_to_float32(state->player_position_y[i]);
 
-    #define DRAW_SCORE(score, px, py, r, g, b)  \
-        DRAW_DIGIT((score) / 10, (px),     (py), r, g, b); \
-        DRAW_DIGIT((score) % 10, (px) + 8, (py), r, g, b)
+        uint8 red  = (uint8)(255 * (1 - i));
+        uint8 blue = (uint8)(255 * i);
 
-    DRAW_SCORE(state->score[0], TABLE_CX - 8, TABLE_TOP    + 5,  220, 120, 100);
-    DRAW_SCORE(state->score[1], TABLE_CX - 8, TABLE_BOTTOM - 15, 100, 120, 220);
+        // Тень
+        draw_circle(20, 40, 20,
+            px + 3.0f, py - BLOBBY_LOWER_SPHERE - 3.0f, BLOBBY_LOWER_RADIUS);
 
-    #undef DRAW_SCORE
-    #undef DRAW_DIGIT
+        // Нижняя сфера (ниже центра в Y-up)
+        draw_circle(red, 0, blue,
+            px, py - BLOBBY_LOWER_SPHERE, BLOBBY_LOWER_RADIUS);
+        // Верхняя сфера (выше центра в Y-up)
+        draw_circle(red, 0, blue,
+            px, py + BLOBBY_UPPER_SPHERE, BLOBBY_UPPER_RADIUS);
+    }
 
-    // ── 5. Paddles ────────────────────────────────────────────────────────
-    #define DRAW_PADDLE(px, py, or, og, ob, ir, ig, ib)          \
-    do {                                                           \
-        draw_circle(10, 12, 16, (px) + 1.5f, (py) + 2.0f,        \
-                    (float32)PADDLE_RADIUS);                       \
-        draw_circle(or, og, ob, (px), (py),                       \
-                    (float32)PADDLE_RADIUS);                       \
-        draw_circle(ir, ig, ib, (px), (py),                       \
-                    (float32)(PADDLE_RADIUS - 3));                 \
-        draw_circle(255, 230, 210, (px), (py), 2.5f);             \
-    } while(0)
+    // ── Мяч ───────────────────────────────────────────────────────────────────
+    float32 bx = fixed32_to_float32(state->ball_position_x);
+    float32 by = fixed32_to_float32(state->ball_position_y);
 
-    DRAW_PADDLE(
-        fixed32_to_float32(state->paddle_position_x[0]),
-        fixed32_to_float32(state->paddle_position_y[0]),
-        200, 80, 70, 230, 120, 100);
+    draw_circle(20, 40, 20,      bx + 3.0f, by - 3.0f, BALL_RADIUS);         // тень
+    draw_circle(240, 240, 30,    bx, by, BALL_RADIUS);                        // мяч
 
-    DRAW_PADDLE(
-        fixed32_to_float32(state->paddle_position_x[1]),
-        fixed32_to_float32(state->paddle_position_y[1]),
-        70, 80, 200, 100, 120, 230);
 
-    #undef DRAW_PADDLE
+    // ── Счёт (кружки вверху экрана) ───────────────────────────────────────────
+    float32 score_y = GROUND_PLANE_HEIGHT_MAX - 20.0f;
+    for (int32 s = 0; s < state->score[0]; s += 1)
+        draw_circle(255, 80, 80, 30.0f + s * 18.0f, score_y, 7.0f);
+    for (int32 s = 0; s < state->score[1]; s += 1)
+        draw_circle(80, 80, 255, RIGHT_PLANE - 30.0f - s * 18.0f, score_y, 7.0f);
 
-    // ── 6. Puck ───────────────────────────────────────────────────────────
-    #define DRAW_PUCK(px, py)                                                        \
-    do {                                                                              \
-        draw_circle(10, 12, 16,    (px) + 1.0f, (py) + 2.0f, (float32)PUCK_RADIUS); \
-        draw_circle(200, 205, 215, (px), (py),  (float32)PUCK_RADIUS);               \
-        draw_circle(150, 155, 165, (px), (py),  (float32)(PUCK_RADIUS - 2));         \
-        draw_circle(90,  95,  105, (px), (py),  1.5f);                               \
-    } while(0)
-
-    DRAW_PUCK(
-        fixed32_to_float32(state->puck_position_x),
-        fixed32_to_float32(state->puck_position_y));
-
-    #undef DRAW_PUCK
+    render_bitmap(game->test_image, 100, 100);
 
     present_offscreen(game->offscreen);
 }

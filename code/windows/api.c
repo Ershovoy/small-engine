@@ -91,11 +91,6 @@ static void* commit_memory_implementation(void* memory, int64 size)
     return VirtualAlloc(memory, size, MEM_COMMIT, PAGE_READWRITE);
 }
 
-static void* allocate_memory_implementation(int64 size)
-{
-    return VirtualAlloc(0, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-}
-
 // TODO: Can decommit only the end of memory block
 static void decommit_memory_implementation(void* memory, int64 size)
 {
