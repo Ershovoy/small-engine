@@ -90,8 +90,8 @@ LRESULT CALLBACK window_procedure(HWND   window,
         case WM_GETMINMAXINFO:
         {
             RECT client_rectangle = { 0 };
-            client_rectangle.right = game_horizontal_resoultion;
-            client_rectangle.bottom = game_vertical_resolution;
+            client_rectangle.right = MINIMUM(game_horizontal_resoultion, GAME_DEFAULT_HORIZONTAL_RESOLUTION);
+            client_rectangle.bottom = MINIMUM(game_vertical_resolution, GAME_DEFAULT_VERTICAL_RESOLUTION);
             RECT window_rectangle = client_rectangle;
             AdjustWindowRectEx(&window_rectangle, window_style, 0, window_extended_style);
             LONG minimal_window_width = window_rectangle.right - window_rectangle.left;

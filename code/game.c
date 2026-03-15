@@ -14,7 +14,7 @@
 static bool32 initialize_game()
 {
     Arena arena = { 0 };
-    arena_initialize(&arena, MEGABYTES(256));
+    arena_initialize(&arena, MEGABYTES(256 * 2));
     game = arena_allocate(&arena, sizeof(Game));
 
     Image image = { 0 };
@@ -40,10 +40,25 @@ static bool32 initialize_game()
     void* buffer = arena_allocate(&arena, file_size);
     game->test_sound = read_sound_file(file_name, lengthof(file_name), buffer);
 
-    char8 image_file_name[] = "font.bmp";
+    char8 image_file_name[] = "test.bmp";
     int64 image_file_size = get_file_size(image_file_name, lengthof(image_file_name));
     void* image_buffer = arena_allocate(&arena, image_file_size);
     game->test_image = load_bitmap(image_file_name, lengthof(image_file_name), image_buffer);
+
+    char8 image_file_name2[] = "background.bmp";
+    image_file_size = get_file_size(image_file_name2, lengthof(image_file_name2));
+    image_buffer = arena_allocate(&arena, image_file_size);
+    game->background = load_bitmap(image_file_name2, lengthof(image_file_name2), image_buffer);
+
+    char8 image_file_name3[] = "ball.bmp";
+    image_file_size = get_file_size(image_file_name3, lengthof(image_file_name3));
+    image_buffer = arena_allocate(&arena, image_file_size);
+    game->ball = load_bitmap(image_file_name3, lengthof(image_file_name3), image_buffer);
+
+    char8 image_file_name4[] = "blobby.bmp";
+    image_file_size = get_file_size(image_file_name4, lengthof(image_file_name4));
+    image_buffer = arena_allocate(&arena, image_file_size);
+    game->player = load_bitmap(image_file_name4, lengthof(image_file_name4), image_buffer);
 
     game->is_offline = 1;
 
@@ -55,6 +70,26 @@ static bool32 initialize_game()
 static void deinitialize_game()
 {
 
+}
+
+static Player_input collect_second_player_input()
+{
+    Player_input player_input = { 0 };
+
+    if (is_button_down(KEY_LEFT))
+    {
+        player_input.left = 1;
+    }
+    if (is_button_down(KEY_UP))
+    {
+        player_input.up = 1;
+    }
+    if (is_button_down(KEY_RIGHT))
+    {
+        player_input.right = 1;
+    }
+
+    return player_input;
 }
 
 static Player_input collect_player_input()
@@ -425,8 +460,10 @@ static void offline()
     if (game->update_accumulator >= game->time_per_update)
     {
         Player_input input = collect_player_input();
+        Player_input second_input = collect_second_player_input();
         Tick_input tick_input = { 0 };
         tick_input.player_inputs[0] = input;
+        tick_input.player_inputs[1] = second_input;
 
         game->previous_state = game->state;
         game->previous_tick_input = tick_input;

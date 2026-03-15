@@ -61,6 +61,7 @@ static void draw_rectangle(uint8 red, uint8 green, uint8 blue, int32 left, int32
 
 static void draw_horizontal_line(uint8 red, uint8 green, uint8 blue, float32 y)
 {
+    y += 100;
     int32 y2 = round_float32_to_int32(y);
     for (int32 x = 0; x < game->offscreen.width; x += 1)
     {
@@ -183,7 +184,10 @@ static void render_bitmap(Image bitmap, float32 xx, float32 yy)
         {
             if (*bitmap_pixel & 0xFF000000)
             {
-                *offscreen_pixel = *bitmap_pixel;
+                uint32 pixel = *bitmap_pixel;
+                *offscreen_pixel = (pixel & 0xFF00FF00)
+                                | ((pixel & 0x000000FF) << 16)
+                                | ((pixel & 0x00FF0000) >> 16);
             }
 
             offscreen_pixel += 1;

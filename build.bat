@@ -9,6 +9,6 @@ DEL *.pdb > NUL 2> NUL
 
 ECHO(
 ECHO BUILDING
-CALL ../build_windows.bat
+CALL ..\build_windows.bat
 
 POPD

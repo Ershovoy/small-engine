@@ -41,6 +41,10 @@ typedef struct
     Sound test_sound;
     Image test_image;
 
+    Image background;
+    Image ball;
+    Image player;
+
     uint32 ips[MAX_PLAYERS];
     uint16 ports[MAX_PLAYERS];
     bool32 is_connected[MAX_PLAYERS];
