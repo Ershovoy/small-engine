@@ -8,6 +8,8 @@
 #define assert(expression) expression
 #endif
 
+#define ASSERT(expression) if (!(expression)) { *(int64*)0 = 0; }
+
 #define KILOBYTES(value) ((int64)(value) * 1024)
 #define MEGABYTES(value) (KILOBYTES(value) * 1024)
 #define GIGABYTES(value) (MEGABYTES(value) * 1024)

@@ -7,4 +7,5 @@
 #define float32_to_fixed32(value) ((fixed32)((value) * 32768.0f))
 #define fixed32_to_float32(value) (((float32)(value)) / 32768.0f)
 
+// TODO: Probably not deterministic
 #define sqrt_fixed32(value) (float32_to_fixed32(square_root(fixed32_to_float32(value))))

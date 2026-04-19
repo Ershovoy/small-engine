@@ -1,4 +1,4 @@
 @echo off
 
 CALL shell.bat
-CALL 10x.10x | EXIT /b
+CALL workspace.10x .\ | EXIT /b

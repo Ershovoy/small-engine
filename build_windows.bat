@@ -28,7 +28,7 @@ IF %no_c_extention%==1 (
 
 SET common_compiler_flags=/TC /nologo /FC /J
 
-SET compiler_warning_options=/WX /W4 /wd4189 /wd4100 /wd4142 /wd4459 /wd4456 /wd4101
+SET compiler_warning_options=/WX /W4 /wd4189 /wd4100 /wd4459 /wd4456 /wd4101
 
 IF %debug_info%==1 (
     SET debug_flags=/Z7 /Od /MTd

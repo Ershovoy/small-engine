@@ -3,11 +3,6 @@
 
 // }
 
-static void draw_text(char8* data, int64 length)
-{
-
-}
-
 static void clear(uint8 red, uint8 green, uint8 blue)
 {
     uint32* image_row = game->offscreen.image.memory;
@@ -78,9 +73,93 @@ static void draw_vertical_line(uint8 red, uint8 green, uint8 blue, float32 x)
     }
 }
 
+//typedef struct
+//{
+//	int32 min_x;
+//	int32 min_y;
+//	int32 max_x;
+//	int32 max_y;
+//} Rectangle;
+
+typedef struct
+{
+	Image image;
+	int32 width;
+	int32 height;
+} Glyph;
+
+typedef struct
+{
+	Glyph glyphs[256];
+} Font;
+
+
+
+static void draw_character(char8 character, float32 position_x, float32 position_y)
+{
+    int32 min_x = round_float32_to_int32(position_x);
+    int32 min_y = round_float32_to_int32(position_y);
+    int32 max_x = round_float32_to_int32(position_x + 8.0f);
+    int32 max_y = round_float32_to_int32(position_y + 8.0f);
+
+    int32 bitmap_offset_x = 8 * (character % 16);
+    int32 bitmap_offset_y = 8 * (15 - character / 16);
+
+    if (min_x < 0)
+    {
+        bitmap_offset_x += -min_x;
+        min_x = 0;
+    }
+    if (min_y < 0)
+    {
+        bitmap_offset_y += -min_y;
+        min_y = 0;
+    }
+    if (max_x > game->offscreen.width)
+    {
+        max_x = game->offscreen.width;
+    }
+    if (max_y > game->offscreen.height)
+    {
+        max_y = game->offscreen.height;
+    }
+
+    uint32* offscreen_row = (uint32*)game->offscreen.image.memory + min_y * game->offscreen.width + min_x;
+    uint32* bitmap_row = (uint32*)game->font.memory + bitmap_offset_y * game->font.width + bitmap_offset_x;
+    for (int32 y = min_y; y < max_y; y += 1)
+    {
+        uint32* offscreen_pixel = offscreen_row;
+        uint32* bitmap_pixel = bitmap_row;
+        for (int32 x = min_x; x < max_x; x += 1)
+        {
+            if (*bitmap_pixel & 0x00FFFFFF)
+            {
+                uint32 pixel = *bitmap_pixel;
+                *offscreen_pixel = (pixel & 0xFF00FF00)
+                                | ((pixel & 0x000000FF) << 16)
+                                | ((pixel & 0x00FF0000) >> 16);
+            }
+
+            offscreen_pixel += 1;
+            bitmap_pixel += 1;
+        }
+        offscreen_row += game->offscreen.width;
+        bitmap_row += game->font.width;
+    }
+
+}
+
+static void draw_text(char8* message, int64 length, float32 position_x, float32 position_y)
+{
+    for (int32 i = 0; i < length; i += 1)
+    {
+        draw_character((char8)message[i], position_x, position_y);
+        position_x += 8.0f;
+    }
+}
+
 static void draw_circle(uint8 red, uint8 green, uint8 blue, float32 x, float32 y, float32 radius)
 {
-    y += 100;
     int32 left = round_float32_to_int32(x - radius);
     int32 bottom = round_float32_to_int32(y - radius);
     int32 right = round_float32_to_int32(x + radius);

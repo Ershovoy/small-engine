@@ -1,3 +1,14 @@
+void copy_memory(void* destination, void* source, int64 size)
+{
+    while (size > 0)
+    {
+        *(byte*)destination = *(byte*)source;
+        destination = (byte*)destination + 1;
+        source = (byte*)source + 1;
+        size -= 1;
+    }
+}
+
 static void arena_initialize(Arena* arena, int64 capacity)
 {
     void* memory = reserve_memory(capacity);
@@ -10,32 +21,31 @@ static void arena_initialize(Arena* arena, int64 capacity)
     }
 }
 
+static bool32 is_power_of_two(int64 address)
+{
+    return (address & (address - 1)) == 0;
+}
+
 static void* arena_allocate(Arena* arena, int64 size)
 {
-    int32 align = 8;
-    int32 remainder = arena->offset % align;
-    if (remainder != 0)
-    {
-        int32 padding = align - remainder;
-        arena->offset += padding;
-    }
+    void* result = 0;
 
+    arena->offset = round_up_to_multiple(arena->offset, 8);
     if (arena->committed < arena->offset + size)
     {
-        int32 commit_size = (int32)size;
-        int32 remainder = size % MEMORY_PAGE_SIZE;
-        if (remainder != 0)
+        int64 commit_size = round_up_to_multiple(size, MEMORY_PAGE_SIZE);
+        if (arena->capacity >= arena->committed + commit_size)
         {
-            int32 padding = MEMORY_PAGE_SIZE - remainder;
-            commit_size += padding;
+            commit_memory(arena->memory + arena->committed, commit_size);
+            arena->committed += commit_size;
         }
-        commit_memory(arena->memory + arena->committed, commit_size);
-        arena->committed += commit_size;
     }
 
-    void* result = arena->memory + arena->offset;
-
-    arena->offset += size;
+    if (arena->committed >= arena->offset + size)
+    {
+        result = arena->memory + arena->offset;
+        arena->offset += size;
+    }
 
     return result;
 }

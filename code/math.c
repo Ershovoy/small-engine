@@ -2,6 +2,18 @@
 #define max(a, b) (((a) < (b)) ? (b) : (a))
 #define square(a) ((a) * (a))
 
+static int64 round_up_to_multiple(int64 value, int64 multiple)
+{
+	int64 remainder = value % multiple;
+    if (remainder != 0)
+    {
+        int64 padding = multiple - remainder;
+        value += padding;
+    }
+
+    return value;
+}
+
 int32 round_float32_to_int32(float32 number)
 {
     if (number > 0.0f)

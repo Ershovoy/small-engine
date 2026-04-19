@@ -6,6 +6,7 @@
 #include "renderer.h"
 #include "platform_api.h"
 #include "arena.h"
+#include "pool.h"
 #include "string.h"
 #include "game_state.h"
 #include "game_render.h"
@@ -17,8 +18,16 @@
 // 0x7f000001 = 127.0.0.1
 // 0x5DAB0267 = 93.171.2.103
 // 0xC0A8006A = 192.168.0.106
-#define SERVER_IP 0x5DAB0267
+#define SERVER_IP 0x7f000001
 #define SERVER_PORT 0xFFFF
+
+typedef enum {
+	GAME_MODE_EMPTY,
+    GAME_MODE_OFFLINE,
+    GAME_MODE_SERVER,
+    GAME_MODE_CLIENT,
+	GAME_MODE_COUNT
+} Game_mode;
 
 typedef struct
 {
@@ -34,12 +43,15 @@ typedef struct
     int64 frame_accumulator;
     int64 previous_frame_time;
 
+    int64 update_time;
+    int64 frame_time;
+
     Game_state state;
     Game_state previous_state;
     Tick_input previous_tick_input;
 
     Sound test_sound;
-    Image test_image;
+    Image font;
 
     Image background;
     Image ball;
@@ -50,9 +62,7 @@ typedef struct
     bool32 is_connected[MAX_PLAYERS];
     int64 last_packet_time[MAX_PLAYERS];
 
-    bool32 is_server;
-    bool32 is_client;
-    bool32 is_offline;
+	Game_mode mode;
 
     Tick_input tick_input_server_batch[TICK_INPUT_BATCH_SIZE];
 

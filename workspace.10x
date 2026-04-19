@@ -28,7 +28,7 @@
 				<CleanCommand></CleanCommand>
 				<BuildWorkingDirectory></BuildWorkingDirectory>
 				<CancelBuild></CancelBuild>
-				<Exe></Exe>
+				<Exe>build\main.exe</Exe>
 				<Args></Args>
 				<WorkingDirectory>data</WorkingDirectory>
 				<DebugCommand></DebugCommand>

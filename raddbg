@@ -1,0 +1,9 @@
+// raddbg 0.9.21 project file
+
+target:
+{
+  executable: "build/main.exe"
+  working_directory: data
+  enabled: 1
+  debug_subprocesses: 0
+}
