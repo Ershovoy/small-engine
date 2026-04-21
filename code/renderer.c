@@ -56,7 +56,6 @@ static void draw_rectangle(uint8 red, uint8 green, uint8 blue, int32 left, int32
 
 static void draw_horizontal_line(uint8 red, uint8 green, uint8 blue, float32 y)
 {
-    y += 100;
     int32 y2 = round_float32_to_int32(y);
     for (int32 x = 0; x < game->offscreen.width; x += 1)
     {
@@ -93,9 +92,7 @@ typedef struct
 	Glyph glyphs[256];
 } Font;
 
-
-
-static void draw_character(char8 character, float32 position_x, float32 position_y)
+static void draw_character(char8 character, float32 position_x, float32 position_y, uint8 red, uint8 green, uint8 blue)
 {
     int32 min_x = round_float32_to_int32(position_x);
     int32 min_y = round_float32_to_int32(position_y);
@@ -135,9 +132,10 @@ static void draw_character(char8 character, float32 position_x, float32 position
             if (*bitmap_pixel & 0x00FFFFFF)
             {
                 uint32 pixel = *bitmap_pixel;
-                *offscreen_pixel = (pixel & 0xFF00FF00)
-                                | ((pixel & 0x000000FF) << 16)
-                                | ((pixel & 0x00FF0000) >> 16);
+                // *offscreen_pixel = (pixel & 0xFF00FF00)
+                //                 | ((pixel & 0x000000FF) << 16)
+                //                 | ((pixel & 0x00FF0000) >> 16);
+                *offscreen_pixel = (uint32)(red | green << 8 | blue << 16);
             }
 
             offscreen_pixel += 1;
@@ -149,11 +147,12 @@ static void draw_character(char8 character, float32 position_x, float32 position
 
 }
 
-static void draw_text(char8* message, int64 length, float32 position_x, float32 position_y)
+static void draw_text(char8* message, int64 length, float32 position_x, float32 position_y, uint8 red, uint8 green, uint8 blue)
 {
     for (int32 i = 0; i < length; i += 1)
     {
-        draw_character((char8)message[i], position_x, position_y);
+        draw_character((char8)message[i], position_x - 1, position_y - 1, red / 2, green / 2, blue / 2);
+        draw_character((char8)message[i], position_x, position_y, red, green, blue);
         position_x += 8.0f;
     }
 }
@@ -196,21 +195,31 @@ static void draw_circle(uint8 red, uint8 green, uint8 blue, float32 x, float32 y
     }
 }
 
-static Image load_bitmap(char8* file_name, int64 file_name_length, void* buffer)
+static void parse_bitmap_into_image()
+{
+
+}
+
+static Image load_bitmap(String file_name)
 {
     Image result = { 0 };
 
-    int64 file_size = get_file_size(file_name, file_name_length);
-    if (read_file(file_name, file_name_length, buffer))
+    char8* image_file_name = file_name.data;
+    int64 image_file_name_length = file_name.length;
+    int64 image_file_size = get_file_size(image_file_name, image_file_name_length);
+    void* image_buffer = arena_allocate(&game->image_arena, image_file_size);
+
+    int64 file_size = get_file_size(image_file_name, image_file_name_length);
+    if (read_file(image_file_name, image_file_name_length, image_buffer))
     {
         Bitmap_file_header bitmap_file_header = { 0 };
 
-        bitmap_file_header.bitmap_offset = *(uint32*)((char8*)buffer + 10);
-        bitmap_file_header.bitmap_width = *(int32*)((char8*)buffer + 18);
-        bitmap_file_header.bitmap_height = *(int32*)((char8*)buffer + 22);
-        bitmap_file_header.bitmap_size = *(uint32*)((char8*)buffer + 34);
+        bitmap_file_header.bitmap_offset = *(uint32*)((char8*)image_buffer + 10);
+        bitmap_file_header.bitmap_width = *(int32*)((char8*)image_buffer + 18);
+        bitmap_file_header.bitmap_height = *(int32*)((char8*)image_buffer + 22);
+        bitmap_file_header.bitmap_size = *(uint32*)((char8*)image_buffer + 34);
 
-        result.memory = (uint32*)((char8*)buffer + bitmap_file_header.bitmap_offset);
+        result.memory = (uint32*)((char8*)image_buffer + bitmap_file_header.bitmap_offset);
         result.size = bitmap_file_header.bitmap_size;
         result.width = bitmap_file_header.bitmap_width;
         result.height = bitmap_file_header.bitmap_height;
@@ -236,13 +245,11 @@ static void render_bitmap(Image bitmap, float32 xx, float32 yy)
     {
         bitmap_offset_x = -min_x;
         min_x = 0;
-        //bitmap_offset_x = -(position_x - bitmap.width / 2);
     }
     if (min_y < 0)
     {
         bitmap_offset_y = -min_y;
         min_y = 0;
-        //bitmap_offset_y = -(position_y - bitmap.height / 2);
     }
     if (max_x > game->offscreen.width)
     {

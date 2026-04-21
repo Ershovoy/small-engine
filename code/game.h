@@ -29,6 +29,13 @@ typedef enum {
 	GAME_MODE_COUNT
 } Game_mode;
 
+typedef enum {
+    GAME_SCREEN_EMPTY,
+    GAME_SCREEN_MENU,
+    GAME_SCREEN_MAIN,
+    GAME_SCREEN_COUNT
+} Game_screen;
+
 typedef struct
 {
     Image_view offscreen;
@@ -63,11 +70,16 @@ typedef struct
     int64 last_packet_time[MAX_PLAYERS];
 
 	Game_mode mode;
+    Game_screen screen;
 
     Tick_input tick_input_server_batch[TICK_INPUT_BATCH_SIZE];
 
     Tick_input tick_input_buffer[MAX_BUFFERED_TICKS];
     bool32 tick_input_valid[MAX_BUFFERED_TICKS];
+
+    Arena string_arena;
+    Arena image_arena;
+    Arena sound_arena;
 } Game;
 
 static Game* game = { 0 };

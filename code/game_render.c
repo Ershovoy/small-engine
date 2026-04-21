@@ -63,23 +63,19 @@ static void render_game_state(Game_state* state)
 
 	render_bitmap(game->font, game->font.width / 2.0f, game->font.height / 2.0f);
 
-    draw_character('A', 200.0f, 200.0f);
-    draw_character('a', -0.0f, 0.0f);
-    draw_character('a', -1.0f, 8.0f);
-    draw_character('a', -2.0f, 16.0f);
-    draw_character('a', -3.0f, 24.0f);
-    draw_character('a', -4.0f, 32.0f);
     String s = STRING_LITERAL("Hello, world!");
-    draw_text(s.data, s.length, 16.0f, 128.0f);
-    char8 buffer[256] = { 0 };
-    int64 length = int32_to_string(buffer, sizeof(buffer),  (int32)game->update_time / 1'000'000);
-    s = STRING_LITERAL("Update time:");
-    draw_text(s.data, s.length, 0.0f, 148.0f);
-    draw_text(buffer, length, 128.0f, 148.0f);
-    length = int32_to_string(buffer, sizeof(buffer), MAXIMUM((int32)game->frame_time, 1) / 1'000'000);
-    s = STRING_LITERAL("Frame time:");
-    draw_text(s.data, s.length, 0.0f, 164.0f);
-    draw_text(buffer, length, 128.0f, 164.0f);
+    draw_text(s.data, s.length, 16.0f, 128.0f, 255, 0, 0);
+    s = STRING_LITERAL("Update time: ");
+    String ss = int64_to_string(game->update_time / 1'000'000);
+    String sss = add_string(s, ss);
+    draw_text(sss.data, sss.length, 0.0f, 148.0f, 0,0,255);
+
+    String string = int64_to_string(MAXIMUM(game->frame_time, 1) / 1'000'000);
+    s = STRING_LITERAL("Frame time: ");
+    s = add_string(s, string);
+    draw_text(s.data, s.length, 0.0f, 164.0f, 0, 255, 255);
+
+    arena_clear(&game->string_arena);
 
     present_offscreen(game->offscreen);
 }

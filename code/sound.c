@@ -1,8 +1,11 @@
-Sound read_sound_file(char8* file_name, int64 file_name_length, void* buffer)
+Sound read_sound_file(String file)
 {
     Sound result = { 0 };
 
+    char8* file_name = file.data;
+    int64 file_name_length = file.length;
     int64 file_size = get_file_size(file_name, file_name_length);
+    void* buffer = arena_allocate(&game->sound_arena, file_size);
     if (read_file(file_name, file_name_length, buffer))
     {
         Wav_file_header* wav_file_header = (Wav_file_header*)buffer;

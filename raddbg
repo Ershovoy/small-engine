@@ -1,5 +1,6 @@
 // raddbg 0.9.21 project file
 
+recent_file: path: "code/windows/main.c"
 target:
 {
   executable: "build/main.exe"

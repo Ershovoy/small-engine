@@ -36,8 +36,10 @@ static void* arena_allocate(Arena* arena, int64 size)
         int64 commit_size = round_up_to_multiple(size, MEMORY_PAGE_SIZE);
         if (arena->capacity >= arena->committed + commit_size)
         {
-            commit_memory(arena->memory + arena->committed, commit_size);
-            arena->committed += commit_size;
+            if (commit_memory(arena->memory + arena->committed, commit_size))
+            {
+                arena->committed += commit_size;
+            }
         }
     }
 

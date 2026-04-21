@@ -1,11 +1,11 @@
 #include "game.h"
 #include "fixed_point.c"
 #include "math.c"
-#include "string.c"
 #include "input.c"
 #include "platform_api.c"
-#include "renderer.c"
 #include "arena.c"
+#include "renderer.c"
+#include "string.c"
 #include "pool.c"
 #include "game_state.c"
 #include "game_render.c"
@@ -36,32 +36,21 @@ static bool32 initialize_game()
 
     game->time_per_frame = (int64)1'000'000'000 / 60;
 
-    char8 file_name[] = "sample.wav";
-    int64 file_size = get_file_size(file_name, lengthof(file_name));
-    void* buffer = arena_allocate(&arena, file_size);
-    game->test_sound = read_sound_file(file_name, lengthof(file_name), buffer);
 
-    char8 image_file_name[] = "font.bmp";
-    int64 image_file_size = get_file_size(image_file_name, lengthof(image_file_name));
-    void* image_buffer = arena_allocate(&arena, image_file_size);
-    game->font = load_bitmap(image_file_name, lengthof(image_file_name), image_buffer);
+    arena_initialize(&game->sound_arena, MEGABYTES(32));
+    game->test_sound = read_sound_file(STRING_LITERAL("sample.wav"));
 
-    char8 image_file_name2[] = "background.bmp";
-    image_file_size = get_file_size(image_file_name2, lengthof(image_file_name2));
-    image_buffer = arena_allocate(&arena, image_file_size);
-    game->background = load_bitmap(image_file_name2, lengthof(image_file_name2), image_buffer);
+    arena_initialize(&game->image_arena, MEGABYTES(128));
 
-    char8 image_file_name3[] = "ball.bmp";
-    image_file_size = get_file_size(image_file_name3, lengthof(image_file_name3));
-    image_buffer = arena_allocate(&arena, image_file_size);
-    game->ball = load_bitmap(image_file_name3, lengthof(image_file_name3), image_buffer);
-
-    char8 image_file_name4[] = "blobby.bmp";
-    image_file_size = get_file_size(image_file_name4, lengthof(image_file_name4));
-    image_buffer = arena_allocate(&arena, image_file_size);
-    game->player = load_bitmap(image_file_name4, lengthof(image_file_name4), image_buffer);
+    game->font = load_bitmap(STRING_LITERAL("font.bmp"));
+    game->background = load_bitmap(STRING_LITERAL("background.bmp"));
+    game->ball = load_bitmap(STRING_LITERAL("ball.bmp"));
+    game->player = load_bitmap(STRING_LITERAL("blobby.bmp"));
 
     game->mode = GAME_MODE_OFFLINE;
+    game->screen = GAME_SCREEN_MENU;
+
+    arena_initialize(&game->string_arena, MEGABYTES(16));
 
     initialize_game_state(&game->state);
 
