@@ -34,7 +34,7 @@ static bool32 initialize_game()
     game->time_per_update = (int64)1'000'000'000 / 60;
     game->start_time = get_time_tick();
 
-    game->time_per_frame = (int64)1'000'000'000 / 60;
+    game->time_per_frame = (int64)1'000'000'000 / 240;
 
 
     arena_initialize(&game->sound_arena, MEGABYTES(32));

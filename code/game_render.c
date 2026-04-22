@@ -61,7 +61,7 @@ static void render_game_state(Game_state* state)
     for (int32 s = 0; s < state->score[1]; s += 1)
         draw_circle(80, 80, 255, RIGHT_PLANE - 30.0f - s * 18.0f, score_y, 7.0f);
 
-	render_bitmap(game->font, game->font.width / 2.0f, game->font.height / 2.0f);
+	//render_bitmap(game->font, game->font.width / 2.0f, game->font.height / 2.0f);
 
     String s = STRING_LITERAL("Hello, world!");
     draw_text(s.data, s.length, 16.0f, 128.0f, 255, 0, 0);
@@ -75,6 +75,28 @@ static void render_game_state(Game_state* state)
     s = add_string(s, string);
     draw_text(s.data, s.length, 0.0f, 164.0f, 0, 255, 255);
 
+    draw_line(255, 255, 255, game->offscreen.width / 2, game->offscreen.height / 2, (int32)(input.mouse.x), (int32)(input.mouse.y));
+
+    float32 a = input.mouse.x * 1000.0f;
+    string = int32_to_string((int32)(a));
+    s = STRING_LITERAL("Mouse X: ");
+    s = add_string(s, string);
+    draw_text(s.data, s.length, 0.0f, 64.0f, 0, 255, 255);
+
+    string = int32_to_string((int32)(input.mouse.y * 1000.0f));
+    s = STRING_LITERAL("Mouse Y: ");
+    s = add_string(s, string);
+    draw_text(s.data, s.length, 0.0f, 48.0f, 0, 255, 255);
+
+    string = int32_to_string((int32)(game->offscreen.width));
+    s = STRING_LITERAL("Width: ");
+    s = add_string(s, string);
+    draw_text(s.data, s.length, 0.0f, 32.0f, 0, 255, 255);
+
+    s = add_string(STRING_LITERAL("Height: "), int32_to_string((int32)(game->offscreen.height)));
+    draw_text(s.data, s.length, 0.0f, 16.0f, 0, 255, 255);
+
+    draw_pixel_i(255,255,255,(int32)input.mouse.x, (int32)input.mouse.y);
     arena_clear(&game->string_arena);
 
     present_offscreen(game->offscreen);

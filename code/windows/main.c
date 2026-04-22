@@ -57,6 +57,39 @@ void toggle_fullscreen()
     is_fullscreen = !is_fullscreen;
 }
 
+void calculate_presented_region()
+{
+    int32 scale_x = client_width / game_horizontal_resoultion;
+    int32 scale_y = client_height / game_vertical_resolution;
+
+    int32 scale = scale_x;
+    if (scale_y < scale_x)
+    {
+        scale = scale_y;
+    }
+
+    if (scale < 1)
+    {
+        scale = 1;
+    }
+
+    present_width = game_horizontal_resoultion * scale;
+    if (present_width > client_width)
+    {
+        present_width = client_width;
+    }
+    present_height = game_vertical_resolution * scale;
+    if (present_height > client_height)
+    {
+        present_height = client_height;
+    }
+
+    present_min_x = (client_width - present_width) / 2;
+    present_max_x = (client_width + present_width) / 2;
+    present_min_y = (client_height - present_height) / 2;
+    present_max_y = (client_height + present_height) / 2;
+}
+
 LRESULT CALLBACK window_procedure(HWND   window,
                                   UINT   message,
                                   WPARAM wParam,
@@ -103,34 +136,28 @@ LRESULT CALLBACK window_procedure(HWND   window,
 
             break;
         }
+        case WM_SETCURSOR:
+        {
+            calculate_presented_region();
+
+            if ((mouse_position_x >= present_min_x && mouse_position_y >= present_min_y && mouse_position_x < present_max_x && mouse_position_y < present_max_y) &&
+                (LOWORD(lParam) == HTCLIENT))
+            {
+                SetCursor(0);
+            }
+            else
+            {
+                result = DefWindowProcW(window, message, wParam, lParam);;
+            }
+
+            break;
+        }
         case WM_PAINT:
         {
             PAINTSTRUCT paint_struct;
             HDC device_context = BeginPaint(window, &paint_struct);
 
-            int32 scale_x = client_width / game_horizontal_resoultion;
-            int32 scale_y = client_height / game_vertical_resolution;
-
-            int32 scale = scale_x;
-            if (scale_y < scale_x)
-            {
-                scale = scale_y;
-            }
-
-            if (scale < 1)
-            {
-                scale = 1;
-            }
-
-            int32 present_width = game_horizontal_resoultion * scale;
-            if (present_width > client_width) present_width = client_width;
-            int32 present_height = game_vertical_resolution * scale;
-            if (present_height > client_height) present_height = client_height;
-
-            int32 present_min_x = (client_width - present_width) / 2;
-            int32 present_max_x = (client_width + present_width) / 2;
-            int32 present_min_y = (client_height - present_height) / 2;
-            int32 present_max_y = (client_height + present_height) / 2;
+            calculate_presented_region();
 
             PatBlt(device_context, 0, 0, present_min_x, client_height, BLACKNESS);
             PatBlt(device_context, present_max_x, 0, client_width - present_max_x, client_height, BLACKNESS);
@@ -295,30 +322,10 @@ void process_window_messages()
             }
             case WM_MOUSEMOVE:
             {
-                int32 mouse_position_x = GET_X_LPARAM(message.lParam);
-                int32 mouse_position_y = client_height - GET_Y_LPARAM(message.lParam) - 1;
+                mouse_position_x = GET_X_LPARAM(message.lParam);
+                mouse_position_y = client_height - GET_Y_LPARAM(message.lParam) - 1;
 
-                int32 scale_x = client_width / game_horizontal_resoultion;
-                int32 scale_y = client_height / game_vertical_resolution;
-
-                int32 scale = scale_x;
-                if (scale_y < scale_x)
-                {
-                    scale = scale_y;
-                }
-
-                if (scale < 1)
-                {
-                    scale = 1;
-                }
-
-                int32 present_width = game_horizontal_resoultion * scale;
-                int32 present_height = game_vertical_resolution * scale;
-
-                int32 present_min_x = (client_width - present_width) / 2;
-                int32 present_max_x = (client_width + present_width) / 2;
-                int32 present_min_y = (client_height - present_height) / 2;
-                int32 present_max_y = (client_height + present_height) / 2;
+                calculate_presented_region();
 
                 if (mouse_position_x >= present_min_x && mouse_position_y >= present_min_y && mouse_position_x < present_max_x && mouse_position_y < present_max_y)
                 {

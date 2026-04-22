@@ -17,14 +17,16 @@ static int64 uint64_to_buffer(char8* buffer, int64 size, uint64 value)
 {
     int64 index = 0;
 
-    do
+    if (size > 0)
     {
-        buffer[index] = (char8)('0' + (value % 10));
-        index += 1;
-        value /= 10;
-    } while (value > 0 && index < size - 1);
+        do
+        {
+            buffer[index] = (char8)('0' + (value % 10));
+            index += 1;
+            value /= 10;
 
-    buffer[index] = '\0';
+        } while (value > 0 && index < size);
+    }
 
     revert_buffer(buffer, index);
 
@@ -50,15 +52,18 @@ static int64 int64_to_buffer(char8* buffer, int64 size, int64 value)
 {
     int64 index = 0;
 
-    if (value < 0)
+    if (size > 0)
     {
-        // TODO: Undefined behavior in case value is equal to INT64_MIN.
-        value = -value;
-        buffer[index] = '-';
-        index += 1;
-    }
+        if (value < 0)
+        {
+            // TODO: Undefined behavior in case value is equal to INT64_MIN.
+            value = -value;
+            buffer[index] = '-';
+            index += 1;
+        }
 
-    index += uint64_to_buffer(buffer + index, size - index, value);
+        index += uint64_to_buffer(buffer + index, size - index, value);
+    }
 
     return index;
 }

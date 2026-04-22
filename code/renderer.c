@@ -19,6 +19,11 @@ static void clear(uint8 red, uint8 green, uint8 blue)
     }
 }
 
+static void draw_pixel_i(uint8 red, uint8 green, uint8 blue, int32 x, int32 y)
+{
+    game->offscreen.image.memory[y * game->offscreen.width + x] = (uint32)(red | green << 8 | blue << 16);
+}
+
 static void draw_pixel(uint8 red, uint8 green, uint8 blue, float32 position_x, float32 position_y)
 {
     int32 x = round_float32_to_int32(position_x);
@@ -49,10 +54,43 @@ static void draw_rectangle(uint8 red, uint8 green, uint8 blue, int32 left, int32
     }
 }
 
-// static void draw_line(Image image,  Color color, int32 x1, int32 y1, int32 x2, int32 y2)
-// {
+static void draw_line(uint8 red, uint8 green, uint8 blue, int32 x1, int32 y1, int32 x2, int32 y2)
+{
+    // if (left < 0)
+    // {
+    //     left = 0;
+    // }
+    // if (bottom < 0)
+    // {
+    //     bottom = 0;
+    // }
+    // if (right > game->offscreen.width)
+    // {
+    //     right = game->offscreen.width;
+    // }
+    // if (top > game->offscreen.height)
+    // {
+    //     top = game->offscreen.height;
+    // }
 
-// }
+    int32 dx = x2 - x1;
+    int32 dy = y2 - y1;
+    int32 d = 2 * dy - dx;
+    int32 y = y1;
+    for (int32 x = x1; x < x2 + 1; x += 1)
+    {
+        game->offscreen.image.memory[y * game->offscreen.width + x] = (uint32)(red | green << 8 | blue << 16);
+        if (d > 0)
+        {
+            y = y + 1;
+            d = d + (2 * (dy - dx));
+        }
+        else
+        {
+            d = d + 2 * dy;
+        }
+    }
+}
 
 static void draw_horizontal_line(uint8 red, uint8 green, uint8 blue, float32 y)
 {
@@ -144,7 +182,6 @@ static void draw_character(char8 character, float32 position_x, float32 position
         offscreen_row += game->offscreen.width;
         bitmap_row += game->font.width;
     }
-
 }
 
 static void draw_text(char8* message, int64 length, float32 position_x, float32 position_y, uint8 red, uint8 green, uint8 blue)

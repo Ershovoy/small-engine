@@ -24,3 +24,14 @@ static byte scratch_buffer[SCRATCH_BUFFER_SIZE];
 
 static int32 game_vertical_resolution = GAME_DEFAULT_VERTICAL_RESOLUTION;
 static int32 game_horizontal_resoultion = GAME_DEFAULT_HORIZONTAL_RESOLUTION;
+
+static int32 mouse_position_y = 0;
+static int32 mouse_position_x = 0;
+
+static int32 present_min_x = 0;
+static int32 present_max_x = 0;
+static int32 present_min_y = 0;
+static int32 present_max_y = 0;
+
+static int32 present_height = 0;
+static int32 present_width = 0;
