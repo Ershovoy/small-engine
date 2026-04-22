@@ -43,7 +43,7 @@ IF %internal%==1 (
 )
 
 SET compiler_flags=%exclude_c_runtime_compiler_options% %common_compiler_flags% %compiler_warning_options% %optimization_flags% %debug_flags% %others_flags%
-SET linker_flags=%exclude_c_runtime_linker_options% /incremental:no /opt:ref User32.lib Gdi32.lib ntdll.lib Ws2_32.lib Ole32.lib XAudio2.lib
+SET linker_flags=%exclude_c_runtime_linker_options% /incremental:no /opt:ref User32.lib Gdi32.lib Ws2_32.lib Ole32.lib XAudio2.lib winmm.lib
 SET debug_linker_flags=%no_c_runtime_debug_linker_flag% /incremental:no /opt:ref
 
 IF %internal%==1 (

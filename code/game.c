@@ -31,17 +31,20 @@ static bool32 initialize_game()
 
     game->offscreen = image_view;
 
-    game->time_per_update = (int64)1'000'000'000 / 60;
+    game->time_per_update = (int64)1'000'000'000 / 75;
     game->start_time = get_time_tick();
 
-    game->time_per_frame = (int64)1'000'000'000 / 240;
+    game->time_per_frame = (int64)1'000'000'000 / 75;
 
 
-    arena_initialize(&game->sound_arena, MEGABYTES(32));
-    game->test_sound = read_sound_file(STRING_LITERAL("sample.wav"));
+    arena_initialize(&game->sound_arena, MEGABYTES(64));
+    // game->pfiff_sound = read_sound_file(STRING_LITERAL("pfiff.wav"));
+    game->bums_sound = read_sound_file(STRING_LITERAL("bums.wav"));
+    game->chat_sound = read_sound_file(STRING_LITERAL("chat.wav"));
 
     arena_initialize(&game->image_arena, MEGABYTES(128));
 
+game->cursor = load_bitmap(STRING_LITERAL("cursor.bmp"));
     game->font = load_bitmap(STRING_LITERAL("font.bmp"));
     game->background = load_bitmap(STRING_LITERAL("background.bmp"));
     game->ball = load_bitmap(STRING_LITERAL("ball.bmp"));
@@ -88,7 +91,7 @@ static Player_input collect_player_input()
 
     if (is_button_pressed(KEY_E))
     {
-        play_sound(game->test_sound);
+        play_sound(game->pfiff_sound);
     }
 
     if (is_button_down(KEY_W))
@@ -419,7 +422,7 @@ static void game_loop()
             game->previous_tick_input = tick_input;
 
             int64 update_start_time = get_time_tick();
-            update_game_state(&game->state, tick_input, game->time_per_update / 1'000'000'000.0f);
+            update_game_state(&game->state, tick_input, game->time_per_update / 1'000'000'000.0f, 1);
             game->update_time = get_time_tick() - update_start_time;
             if (game->mode == GAME_MODE_SERVER)
             {
@@ -445,7 +448,7 @@ static void game_loop()
         {
             int64 frame_start_time = get_time_tick();
             update_game_state(&game->previous_state, game->previous_tick_input,
-                (game->current_time - game->previous_frame_time) / 1'000'000'000.0f);
+                (game->current_time - game->previous_frame_time) / 1'000'000'000.0f, 0);
 
             render_game_state(&game->previous_state);
             game->frame_time = get_time_tick() - frame_start_time;
@@ -457,5 +460,9 @@ static void game_loop()
 
     game->previous_time = game->current_time;
 
-    //sleep(1'000'000);
+    int64 sleep_time = get_time_tick();
+    sleep(MINIMUM(MINIMUM(game->time_per_frame - game->frame_accumulator,
+                  game->time_per_update - game->update_accumulator),
+                  MINIMUM(game->time_per_frame, game->time_per_update) / 2));
+    game->sleep_time = get_time_tick() - sleep_time;
 }

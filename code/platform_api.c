@@ -1,4 +1,4 @@
-static void sleep(int32 nanoseconds)
+static void sleep(int64 nanoseconds)
 {
     platform_api.sleep(nanoseconds);
 }

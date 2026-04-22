@@ -96,8 +96,13 @@ static void render_game_state(Game_state* state)
     s = add_string(STRING_LITERAL("Height: "), int32_to_string((int32)(game->offscreen.height)));
     draw_text(s.data, s.length, 0.0f, 16.0f, 0, 255, 255);
 
+    s = add_string(STRING_LITERAL("sleep ns: "), int32_to_string((int32)(game->sleep_time / 1)));
+    draw_text(s.data, s.length, 0.0f, 0.0f, 255, 127, 64);
+
     draw_pixel_i(255,255,255,(int32)input.mouse.x, (int32)input.mouse.y);
     arena_clear(&game->string_arena);
+
+    render_bitmap(game->cursor, (float32)((int32)input.mouse.x + 5), (float32)((int32)input.mouse.y - 4));
 
     present_offscreen(game->offscreen);
 }

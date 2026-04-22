@@ -102,14 +102,34 @@ static void release_memory_implementation(void* memory)
     VirtualFree(memory, 0, MEM_RELEASE);
 }
 
-static void sleep_implementation(int32 nanoseconds)
+static void sleep_implementation(int64 nanoseconds)
 {
-    if (nanoseconds >= 1'000)
+    if (nanoseconds > 0)
     {
-        LARGE_INTEGER delay;
-        delay.QuadPart = -nanoseconds / 100;
+        if (nanoseconds >= 1'000'000)
+        {
+            HANDLE timer = CreateWaitableTimerW(0, 1, 0);
+            LARGE_INTEGER delay;
+            delay.QuadPart = -nanoseconds / 100;
+            SetWaitableTimer(timer, &delay, 0, 0, 0, 0);
+            WaitForSingleObject(timer, INFINITE);
+            CloseHandle(timer);
+        }
+        else
+        {
+            int64 perfomance_counter_frequency;
+            QueryPerformanceFrequency((LARGE_INTEGER*)&perfomance_counter_frequency);
+            int64 target_counter = (nanoseconds * perfomance_counter_frequency) / 1'000'000'000;
 
-        NtDelayExecution(0, &delay);
+            int64 start_counter;
+            QueryPerformanceCounter((LARGE_INTEGER*)&start_counter);
+            int64 current_counter = start_counter;
+            while (current_counter - start_counter < target_counter)
+            {
+                YieldProcessor();
+                QueryPerformanceCounter((LARGE_INTEGER*)&current_counter);
+            }
+        }
     }
 }
 

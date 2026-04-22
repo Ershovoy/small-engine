@@ -52,17 +52,21 @@ typedef struct
 
     int64 update_time;
     int64 frame_time;
+int64 sleep_time;
 
     Game_state state;
     Game_state previous_state;
     Tick_input previous_tick_input;
 
-    Sound test_sound;
+    Sound pfiff_sound;
+    Sound bums_sound;
+    Sound chat_sound;
     Image font;
 
     Image background;
     Image ball;
     Image player;
+Image cursor;
 
     uint32 ips[MAX_PLAYERS];
     uint16 ports[MAX_PLAYERS];

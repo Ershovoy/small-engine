@@ -1,6 +1,6 @@
 typedef int64 get_time_tick_function();
 
-typedef void sleep_function(int32 nanoseconds);
+typedef void sleep_function(int64 nanoseconds);
 
 typedef int64 get_file_size_function(char8* file_name, int64 file_name_length);
 typedef bool32 read_file_function(char8* file_name, int64 file_name_length, void* memory);

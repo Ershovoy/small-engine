@@ -13,7 +13,7 @@
 #include <windowsx.h>
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <winsock2.h>
-__declspec(dllimport) LONG NTAPI NtDelayExecution(BOOLEAN Alertable, LARGE_INTEGER* DelayInterval);
+#include <mmsystem.h>
 #endif
 
 #ifndef INTERNAL
@@ -138,8 +138,6 @@ LRESULT CALLBACK window_procedure(HWND   window,
         }
         case WM_SETCURSOR:
         {
-            calculate_presented_region();
-
             if ((mouse_position_x >= present_min_x && mouse_position_y >= present_min_y && mouse_position_x < present_max_x && mouse_position_y < present_max_y) &&
                 (LOWORD(lParam) == HTCLIENT))
             {
@@ -325,8 +323,6 @@ void process_window_messages()
                 mouse_position_x = GET_X_LPARAM(message.lParam);
                 mouse_position_y = client_height - GET_Y_LPARAM(message.lParam) - 1;
 
-                calculate_presented_region();
-
                 if (mouse_position_x >= present_min_x && mouse_position_y >= present_min_y && mouse_position_x < present_max_x && mouse_position_y < present_max_y)
                 {
                     process_mouse(mouse_position_x - present_min_x, mouse_position_y - present_min_y, present_width, present_height);
@@ -438,6 +434,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (!device_context)
         ExitProcess(1);
 
+    timeBeginPeriod(1);
+
     DWORD thread_id;
     HANDLE thread_handle = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)game_loop_handle, 0, 0, &thread_id);
 
@@ -450,8 +448,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         DispatchMessageW(&message);
     }
 
+
     WaitForSingleObject(thread_handle, INFINITE);
     CloseHandle(thread_handle);
+
+    timeEndPeriod(1);
 
     destroy_xaudio2();
 

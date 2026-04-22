@@ -89,6 +89,8 @@ static void initialize_game_state(Game_state* state)
     // Мяч — над левым блобом
     state->ball_position_x = float32_to_fixed32(200.0f);
     state->ball_position_y = float32_to_fixed32(STANDARD_BALL_HEIGHT);
+
+    play_sound(game->pfiff_sound);
 }
 // ── deinitialize_game_state ───────────────────────────────────────────────────
 
@@ -99,9 +101,9 @@ static void deinitialize_game_state(Game_state* state)
 
 // ── update_game_state ─────────────────────────────────────────────────────────
 
-static void update_game_state(Game_state* state, Tick_input input, float32 delta_time)
+static void update_game_state(Game_state* state, Tick_input input, float32 delta_time, bool32 is_fixed_update)
 {
-    (void)delta_time; // Физика откалибрована под фиксированный шаг
+    fixed32 dt = multiply_fixed32(float32_to_fixed32(delta_time), float32_to_fixed32(75.0f));
 
     // ── 1. Блобы ──────────────────────────────────────────────────────────────
     for (int32 i = 0; i < MAX_PLAYERS; i += 1)
@@ -129,11 +131,11 @@ static void update_game_state(Game_state* state, Tick_input input, float32 delta
         // Горизонтальная скорость
         vel_x = (int32_to_fixed32(key_right) - int32_to_fixed32(key_left));
         vel_x = multiply_fixed32(vel_x, FX_BLOBBY_SPEED);
-
+        vel_x = multiply_fixed32(vel_x, dt);
         // Интеграция: pos += 0.5 * grav + vel;  vel += grav
         pos_x += vel_x;
-        pos_y += multiply_fixed32(FX_HALF, cur_grav) + vel_y;
-        vel_y += cur_grav;
+        pos_y += multiply_fixed32(multiply_fixed32(FX_HALF, cur_grav) + vel_y, dt);
+        vel_y += multiply_fixed32(cur_grav, dt);
 
         // Приземление
         if (pos_y < FX_GROUND_PLANE_HEIGHT)
@@ -154,9 +156,13 @@ static void update_game_state(Game_state* state, Tick_input input, float32 delta
     fixed32 ball_vel_x = state->ball_velocity_x;
     fixed32 ball_vel_y = state->ball_velocity_y;
 
-    ball_pos_x += ball_vel_x;
-    ball_pos_y += multiply_fixed32(FX_HALF, FX_BALL_GRAVITATION) + ball_vel_y;
-    ball_vel_y += FX_BALL_GRAVITATION;
+    if (state->is_ball_active)
+    {
+        ball_pos_x += multiply_fixed32(ball_vel_x, dt);
+        ball_pos_y += multiply_fixed32(
+            multiply_fixed32(FX_HALF, FX_BALL_GRAVITATION) + ball_vel_y, dt);
+    }
+    ball_vel_y += multiply_fixed32(FX_BALL_GRAVITATION, dt);
 
     // ── 3. Столкновение мяча с блобами ────────────────────────────────────────
     for (int32 i = 0; i < MAX_PLAYERS; i += 1)
@@ -203,6 +209,12 @@ static void update_game_state(Game_state* state, Tick_input input, float32 delta
             ball_vel_y  = multiply_fixed32(ny, FX_BALL_COLLISION_VELOCITY);
             ball_pos_x += ball_vel_x;
             ball_pos_y += ball_vel_y;
+
+            state->is_ball_active = 1;
+            if (is_fixed_update)
+            {
+                play_sound(game->bums_sound);
+            }
         }
     }
 
@@ -223,6 +235,13 @@ static void update_game_state(Game_state* state, Tick_input input, float32 delta
         ball_pos_y = FX_STANDARD_BALL_HEIGHT;
         ball_vel_x = FX_ZERO;
         ball_vel_y = FX_ZERO;
+
+        state->is_ball_active = 0;
+
+        if (is_fixed_update)
+        {
+            play_sound(game->chat_sound);
+        }
     }
 
     // Левая стена
