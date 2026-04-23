@@ -40,6 +40,9 @@
 // Коэффициенты затухания
 #define FX_DAMP_095                 float32_to_fixed32(0.95f)
 #define FX_DAMP_057                 float32_to_fixed32(0.95f * 0.6f)
+#define FX_DAMP_05                 float32_to_fixed32(0.5f)
+#define FX_DAMP_033                 float32_to_fixed32(0.33f)
+#define FX_DAMP_01                 float32_to_fixed32(0.1f)
 #define FX_DAMP_07                  float32_to_fixed32(0.7f)
 #define FX_DAMP_09                  float32_to_fixed32(0.9f)
 
@@ -167,53 +170,56 @@ static void update_game_state(Game_state* state, Tick_input input, float32 delta
     // ── 3. Столкновение мяча с блобами ────────────────────────────────────────
     for (int32 i = 0; i < MAX_PLAYERS; i += 1)
     {
-        fixed32 blob_pos_x = state->player_position_x[i];
-        fixed32 blob_pos_y = state->player_position_y[i];
-
-        fixed32 col_cx = blob_pos_x;
-        fixed32 col_cy = blob_pos_y;
-        bool32  collide = 0;
-
-        // Нижняя сфера блоба (в Y-up: ниже центра → меньший Y)
+        if (!state->is_ball_on_ground)
         {
-            fixed32 sx = blob_pos_x;
-            fixed32 sy = blob_pos_y - FX_BLOBBY_LOWER_SPHERE;
-            fixed32 dx = ball_pos_x - sx;
-            fixed32 dy = ball_pos_y - sy;
-            if (fx_circle_overlap(dx, dy, FX_BALL_LOWER_RADIUS_SUM))
+            fixed32 blob_pos_x = state->player_position_x[i];
+            fixed32 blob_pos_y = state->player_position_y[i];
+
+            fixed32 col_cx = blob_pos_x;
+            fixed32 col_cy = blob_pos_y;
+            bool32  collide = 0;
+
+            // Нижняя сфера блоба (в Y-up: ниже центра → меньший Y)
             {
-                col_cy  = blob_pos_y - FX_BLOBBY_LOWER_SPHERE;
-                collide = 1;
+                fixed32 sx = blob_pos_x;
+                fixed32 sy = blob_pos_y - FX_BLOBBY_LOWER_SPHERE;
+                fixed32 dx = ball_pos_x - sx;
+                fixed32 dy = ball_pos_y - sy;
+                if (fx_circle_overlap(dx, dy, FX_BALL_LOWER_RADIUS_SUM))
+                {
+                    col_cy = blob_pos_y - FX_BLOBBY_LOWER_SPHERE;
+                    collide = 1;
+                }
             }
-        }
-        // Верхняя сфера блоба (в Y-up: выше центра → больший Y)
-        if (!collide)
-        {
-            fixed32 sx = blob_pos_x;
-            fixed32 sy = blob_pos_y + FX_BLOBBY_UPPER_SPHERE;
-            fixed32 dx = ball_pos_x - sx;
-            fixed32 dy = ball_pos_y - sy;
-            if (fx_circle_overlap(dx, dy, FX_BALL_UPPER_RADIUS_SUM))
+            // Верхняя сфера блоба (в Y-up: выше центра → больший Y)
+            if (!collide)
             {
-                col_cy  = blob_pos_y + FX_BLOBBY_UPPER_SPHERE;
-                collide = 1;
+                fixed32 sx = blob_pos_x;
+                fixed32 sy = blob_pos_y + FX_BLOBBY_UPPER_SPHERE;
+                fixed32 dx = ball_pos_x - sx;
+                fixed32 dy = ball_pos_y - sy;
+                if (fx_circle_overlap(dx, dy, FX_BALL_UPPER_RADIUS_SUM))
+                {
+                    col_cy = blob_pos_y + FX_BLOBBY_UPPER_SPHERE;
+                    collide = 1;
+                }
             }
-        }
 
-        if (collide)
-        {
-            fixed32 nx, ny;
-            fx_normalize(ball_pos_x - col_cx, ball_pos_y - col_cy, &nx, &ny);
-
-            ball_vel_x  = multiply_fixed32(nx, FX_BALL_COLLISION_VELOCITY);
-            ball_vel_y  = multiply_fixed32(ny, FX_BALL_COLLISION_VELOCITY);
-            ball_pos_x += ball_vel_x;
-            ball_pos_y += ball_vel_y;
-
-            state->is_ball_active = 1;
-            if (is_fixed_update)
+            if (collide)
             {
-                play_sound(game->bums_sound);
+                fixed32 nx, ny;
+                fx_normalize(ball_pos_x - col_cx, ball_pos_y - col_cy, &nx, &ny);
+
+                ball_vel_x = multiply_fixed32(nx, FX_BALL_COLLISION_VELOCITY);
+                ball_vel_y = multiply_fixed32(ny, FX_BALL_COLLISION_VELOCITY);
+                ball_pos_x += ball_vel_x;
+                ball_pos_y += ball_vel_y;
+
+                state->is_ball_active = 1;
+                if (is_fixed_update)
+                {
+                    play_sound(game->bums_sound);
+                }
             }
         }
     }
@@ -224,24 +230,31 @@ static void update_game_state(Game_state* state, Tick_input input, float32 delta
     if (ball_pos_y - FX_BALL_RADIUS < FX_ZERO)
     {
         ball_vel_y  = -ball_vel_y;
-        ball_vel_x  = multiply_fixed32(ball_vel_x, FX_DAMP_057);
-        ball_vel_y  = multiply_fixed32(ball_vel_y, FX_DAMP_057);
+        ball_vel_x  = multiply_fixed32(ball_vel_x, FX_DAMP_05);
+        ball_vel_y  = multiply_fixed32(ball_vel_y, FX_DAMP_05);
         ball_pos_y  = FX_BALL_RADIUS;
 
+        if (is_fixed_update && !state->is_ball_on_ground && state->is_ball_active)
+        {
+            state->is_ball_on_ground = 1;
+            play_sound(game->chat_sound);
+        }
+    }
+
+     // Ресет мяча
+    if (state->is_ball_on_ground && ball_vel_x > -FX_HALF && ball_vel_x < FX_HALF
+                                 && ball_vel_y > -FX_HALF && ball_vel_y < FX_HALF
+                                 && ball_pos_y - FX_BALL_RADIUS < FX_HALF)
+    {
         int32 scorer = (ball_pos_x < FX_NET_POSITION_X) ? 1 : 0;
         state->score[scorer] += 1;
-
-        ball_pos_x = (scorer == 0) ? FX_BALL_RESET_RIGHT : FX_BALL_RESET_LEFT;
+        ball_pos_x = (scorer == 1) ? FX_BALL_RESET_RIGHT : FX_BALL_RESET_LEFT;
         ball_pos_y = FX_STANDARD_BALL_HEIGHT;
         ball_vel_x = FX_ZERO;
         ball_vel_y = FX_ZERO;
 
         state->is_ball_active = 0;
-
-        if (is_fixed_update)
-        {
-            play_sound(game->chat_sound);
-        }
+        state->is_ball_on_ground = 0;
     }
 
     // Левая стена

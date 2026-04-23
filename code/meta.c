@@ -16,14 +16,18 @@ void write_header_file(const char* file_paths[], size_t offsets[], unsigned char
     }
 
     // Запись путей к файлам
+    // TODO: Char literal has sighed type always.
     fprintf(file, "static const char8* vfs_file_paths[] =\n{\n");
-    for (int i = 0; i < file_count; i++) 
+    for (int i = 0; i < file_count; i++)
     {
         fprintf(file, "    \"%s\",\n", file_paths[i]);
     }
     fprintf(file, "};\n\n");
 
+    // TODO: vfs_file_sizes
+
     // Запись смещений файлов
+    // TODO: file_data_offsets
     fprintf(file, "static const int32 vfs_file_offsets[] =\n{\n");
     for (int i = 0; i < file_count; i++)
     {

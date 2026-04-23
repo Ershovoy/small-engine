@@ -10,12 +10,20 @@ static int64 get_time_tick()
 
 static int64 get_file_size(char8* file_name, int64 file_name_length)
 {
+#ifdef EMBED_ASSETS
+    return vfs_get_file_size(file_name, file_name_length);
+#else
     return platform_api.get_file_size(file_name, file_name_length);
+#endif
 }
 
 static bool32 read_file(char8* file_name, int64 file_name_length, void* buffer)
 {
+#ifdef EMBED_ASSETS
+    return vfs_read_file(file_name, file_name_length, buffer);
+#else
     return platform_api.read_file(file_name, file_name_length, buffer);
+#endif
 }
 
 static bool32 write_file(char8* file_name, int64 file_name_length, void* data, int64 size)

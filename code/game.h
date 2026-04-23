@@ -12,6 +12,7 @@
 #include "game_render.h"
 #include "network.h"
 #include "sound.h"
+#include "virtual_file_system.h"
 
 #define MAX_BUFFERED_TICKS (64)
 
@@ -52,7 +53,7 @@ typedef struct
 
     int64 update_time;
     int64 frame_time;
-int64 sleep_time;
+    int64 sleep_time;
 
     Game_state state;
     Game_state previous_state;
@@ -66,7 +67,7 @@ int64 sleep_time;
     Image background;
     Image ball;
     Image player;
-Image cursor;
+    Image cursor;
 
     uint32 ips[MAX_PLAYERS];
     uint16 ports[MAX_PLAYERS];
@@ -84,6 +85,18 @@ Image cursor;
     Arena string_arena;
     Arena image_arena;
     Arena sound_arena;
+
+    int32 selected_cell;
+    uint8 cells[4];
+    uint16 port_cell;
+
+    char8 ip_digits[4][3];
+    char8 port_digits[5];
+
+    uint32 ip;
+    uint16 port;
+
+    int32 selected_index;
 } Game;
 
 static Game* game = { 0 };

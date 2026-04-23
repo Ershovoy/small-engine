@@ -5,6 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/code"
             ],
+            "forcedInclude": [
+                "${workspaceFolder}/code/game.h"
+            ],
             "defines": [
                 "BUILD_DEBUG"
             ],

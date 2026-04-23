@@ -1129,3 +1129,32 @@ typedef enum tagCOINIT
 
 __declspec(dllimport) HRESULT __stdcall CoInitializeEx(void* pvReserved, DWORD dwCoInit);
 __declspec(dllimport) HRESULT __stdcall XAudio2Create(IXAudio2** ppXAudio2, UINT32 Flags, XAUDIO2_PROCESSOR XAudio2Processor);
+
+//
+// Cursor (WM_SETCURSOR)
+//
+
+#define WM_SETCURSOR        0x0020
+#define HTCLIENT            1
+
+WINUSERAPI HCURSOR WINAPI SetCursor(HCURSOR hCursor);
+
+//
+// Waitable timer
+//
+
+WINBASEAPI HANDLE WINAPI CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes, BOOL bManualReset, const WCHAR* lpTimerName);
+WINBASEAPI BOOL   WINAPI SetWaitableTimer(HANDLE hTimer, const LARGE_INTEGER* lpDueTime, LONG lPeriod, void* pfnCompletionRoutine, void* lpArgToCompletionRoutine, BOOL fResume);
+
+//
+// YieldProcessor
+//
+
+#define YieldProcessor() __nop()
+
+//
+// Multimedia timer (mmsystem)
+//
+
+__declspec(dllimport) DWORD WINAPI timeBeginPeriod(UINT uPeriod);
+__declspec(dllimport) DWORD WINAPI timeEndPeriod(UINT uPeriod);

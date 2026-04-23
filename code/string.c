@@ -132,7 +132,14 @@ static int64 digits_count(int64 value)
 
 static String uint64_to_string(uint64 value)
 {
+    String result = { 0 };
 
+    int64 required_size = digits_count(value);
+    char8* buffer = arena_allocate(&game->string_arena, required_size);
+    result.length = uint64_to_buffer(buffer, required_size, value);
+    result.data = buffer;
+
+    return result;
 }
 
 static String uint32_to_string(uint32 value)

@@ -194,6 +194,11 @@ static void draw_text(char8* message, int64 length, float32 position_x, float32 
     }
 }
 
+static void draw_text_string(String string, float32 position_x, float32 position_y, uint8 red, uint8 green, uint8 blue)
+{
+    draw_text(string.data, string.length, position_x, position_y, red, green, blue);
+}
+
 static void draw_circle(uint8 red, uint8 green, uint8 blue, float32 x, float32 y, float32 radius)
 {
     int32 left = round_float32_to_int32(x - radius);

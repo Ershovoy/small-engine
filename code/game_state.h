@@ -33,7 +33,7 @@
 #define NET_SPHERE_POSITION  216.0f
 
 // Мяч при старте: в старой системе Y=300.5 сверху → в новой 500-300.5 = 199.5
-#define STANDARD_BALL_HEIGHT 500.0f
+#define STANDARD_BALL_HEIGHT 200.0f
 
 typedef struct
 {
@@ -64,6 +64,9 @@ typedef struct
     fixed32 ball_velocity_y;
 
     int32 score[MAX_PLAYERS];
+
+    bool32 is_ball_on_ground;
+    bool32 is_ball_active;
 
     uint64 tick;
 } Game_state;

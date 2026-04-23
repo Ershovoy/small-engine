@@ -2,7 +2,7 @@
 #include "../game.c"
 #endif
 
-#if NO_C_EXTENTION
+#ifdef NO_C_EXTENTION
 #include "windows.h"
 #else
 #undef max
