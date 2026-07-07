@@ -5,13 +5,14 @@
 
 static void clear(uint8 red, uint8 green, uint8 blue)
 {
+    uint32 color = (uint32)(red | green << 8 | blue << 16);
     uint32* image_row = game->offscreen.image.memory;
     for (int32 y = 0; y < game->offscreen.height; y += 1)
     {
         uint32* image_pixel = image_row;
         for (int32 x = 0; x < game->offscreen.width; x += 1)
         {
-            *image_pixel = (uint32)(red | green << 8 | blue << 16);
+            *image_pixel = color;
 
             image_pixel += 1;
         }
@@ -272,6 +273,7 @@ static Image load_bitmap(String file_name)
 
 static void render_bitmap(Image bitmap, float32 xx, float32 yy)
 {
+    // TracyCZoneN(ctx, "render_bitmap", 1);
     int32 position_x = round_float32_to_int32(xx);
     int32 position_y = round_float32_to_int32(yy);
 
@@ -324,4 +326,5 @@ static void render_bitmap(Image bitmap, float32 xx, float32 yy)
         offscreen_row += game->offscreen.width;
         bitmap_row += bitmap.width;
     }
+    // TracyCZoneEnd(ctx);
 }

@@ -17,6 +17,7 @@ static void on_buffer_end(IXAudio2VoiceCallback* this, void* buffer_context)
     if (xaudio2_source)
     {
         // IXAudio2SourceVoice_DestroyVoice(xaudio2_source->source_voices);
+        // ТУТ ВОЗНИКАЕТ ОШИБКИ ЧТЕНИЯ ПАМЯТИ
         xaudio2_source->is_playing = 0;
     }
 }

@@ -1,3 +1,5 @@
+// #include "../../third_party/tracy/tracy/TracyC.h"
+
 #ifdef INTERNAL
 #include "../game.c"
 #endif
@@ -383,6 +385,8 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
         process_window_messages();
 
         game_loop();
+
+        //TracyCFrameMark;
     }
 
     deinitialize_game();
@@ -399,7 +403,7 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
 }
 
 #ifdef NO_C_RUNTIME
-void __stdcall wWinMainCRTStartup()
+void __stdcall wWinMainCRTStartup(void)
 #else
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 #endif
@@ -447,7 +451,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         TranslateMessage(&message);
         DispatchMessageW(&message);
     }
-
 
     WaitForSingleObject(thread_handle, INFINITE);
     CloseHandle(thread_handle);

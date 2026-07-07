@@ -1,5 +1,7 @@
-// raddbg 0.9.25 project file
+// raddbg 0.9.21 project file
 
+recent_file: path: "code/windows/main.c"
+recent_file: path: "code/windows/xaudio2.h"
 recent_file: path: "code/game.c"
 recent_file: path: "code/input.c"
 recent_file: path: "code/string.c"
@@ -13,7 +15,6 @@ recent_file: path: "code/renderer.c"
 recent_file: path: "code/game_render.c"
 recent_file: path: "code/arena.c"
 recent_file: path: "code/fixed_point.h"
-recent_file: path: "code/windows/main.c"
 recent_file: path: "code/windows/game_dll.c"
 target:
 {
@@ -206,9 +207,4 @@ debug_info:
 {
   path: "C:/Users/PC/Objects/C/small-engine/build/game_31073.pdb"
   timestamp: 66212760092733
-}
-breakpoint:
-{
-  source_location: "code/game.c:597:1"
-  hit_count: 2
 }

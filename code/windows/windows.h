@@ -598,6 +598,7 @@ __declspec(dllimport) u_long  WSAAPI ntohl(u_long netlong);
 
 // Requires windows.h to be included before this file.
 // windows.h provides: HRESULT, DWORD, WORD, BYTE, WCHAR, WINAPI etc.
+#pragma pack(push, 1)
 
 //
 // Calling convention
@@ -1122,6 +1123,8 @@ typedef enum tagCOINIT
     COINIT_DISABLE_OLE1DDE   = 0x4,
     COINIT_SPEED_OVER_MEMORY = 0x8,
 } COINIT;
+
+#pragma pack(pop)
 
 // -----------------------------------------------------------------------
 // Function declarations

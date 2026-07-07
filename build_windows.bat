@@ -1,11 +1,11 @@
 @echo off
 
 SET no_c_runtime=1
-SET no_c_extention=0
-29SET debug_info=0
-SET fast_code=1
-SET embed_assets=1
-SET internal=1
+SET no_c_extention=1
+SET debug_info=1
+SET fast_code=0
+SET embed_assets=0
+SET internal=0
 
 IF %embed_assets%==1 (
     SET compiler_macros=/DEMBED_ASSETS
@@ -43,11 +43,11 @@ IF %internal%==1 (
 )
 
 SET compiler_flags=%exclude_c_runtime_compiler_options% %common_compiler_flags% %compiler_warning_options% %optimization_flags% %debug_flags% %others_flags%
-SET linker_flags=%exclude_c_runtime_linker_options% /incremental:no /opt:ref User32.lib Gdi32.lib Ws2_32.lib Ole32.lib XAudio2.lib winmm.lib
+SET linker_flags=%exclude_c_runtime_linker_options% /incremental:no /opt:ref User32.lib Gdi32.lib Ws2_32.lib Ole32.lib XAudio2.lib winmm.lib advapi32.lib secur32.lib tdh.lib dbghelp.lib
 SET debug_linker_flags=%no_c_runtime_debug_linker_flag% /incremental:no /opt:ref
 
 IF %internal%==1 (
-    CL %compiler_macros% %compiler_flags% ..\code\windows\main.c /link ..\data\icon.res %linker_flags% /OUT:main.exe
+    CL %compiler_macros% %compiler_flags% /DTRACY_ENABLE /I "..\third_party\tracy" ..\code\windows\main.c /link ..\data\icon.res %linker_flags% /OUT:main.exe
 ) ELSE (
     CL %compiler_macros% %compiler_flags% /LD ..\code\windows\game_dll.c /link %debug_linker_flags% /PDB:game_%random%.pdb /OUT:game.dll
     ECHO(

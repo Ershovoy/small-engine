@@ -12,7 +12,7 @@
 #include "game_render.h"
 #include "network.h"
 #include "sound.h"
-#include "virtual_file_system.h"
+
 
 #define MAX_BUFFERED_TICKS (64)
 
@@ -53,6 +53,7 @@ typedef struct
 
     int64 update_time;
     int64 frame_time;
+    int64 present_time;
     int64 sleep_time;
 
     Game_state state;

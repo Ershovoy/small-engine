@@ -2,7 +2,7 @@
 #include "fixed_point.c"
 #include "math.c"
 #include "input.c"
-#include "virtual_file_system.c"
+
 #include "platform_api.c"
 #include "arena.c"
 #include "renderer.c"
@@ -120,13 +120,13 @@ static Player_input collect_player_input()
 
     if (is_button_pressed(BUTTON_WHEEL_UP))
     {
-        // game->offscreen.width -= 10;
-        // game->offscreen.height -= 10;
+        game->offscreen.width -= 10;
+        game->offscreen.height -= 10;
     }
     if (is_button_pressed(BUTTON_WHEEL_DOWN))
     {
-        // game->offscreen.width += 10;
-        // game->offscreen.height += 10;
+        game->offscreen.width += 10;
+        game->offscreen.height += 10;
     }
 
     if (game->offscreen.width > GAME_MAX_HORIZONTAL_RESOLUTION)
@@ -414,7 +414,7 @@ static void game_loop()
 
     int64 time_scale = calculate_time_scale();
     game->update_accumulator += delta_time * time_scale;
-    if (game->update_accumulator >= game->time_per_update)
+    if (game->update_accumulator >= game->time_per_update /*Разделить на что-то, но что?*/)
     {
         Tick_input tick_input = { 0 };
 
@@ -426,6 +426,8 @@ static void game_loop()
             should_update = should_client_tick(&tick_input);
         else if (game->mode == GAME_MODE_OFFLINE)
             should_update = should_offline_tick(&tick_input);
+        else if (game->screen == GAME_SCREEN_MENU)
+            should_update = 1;
 
         if (should_update)
         {
@@ -438,171 +440,6 @@ static void game_loop()
             if (game->mode == GAME_MODE_SERVER)
             {
                 render_game_state(&game->state);
-            }
-        }
-
-        // TODO:
-        if (game->mode == GAME_MODE_EMPTY)
-        {
-            if (game->selected_index == 1)
-            {
-                if (is_button_pressed(KEY_D) || is_button_pressed(KEY_RIGHT) || is_button_pressed(KEY_TAB))
-                {
-                    game->selected_cell = MINIMUM(game->selected_cell + 1, 4);
-                }
-                if (is_button_pressed(KEY_A) || is_button_pressed(KEY_LEFT))
-                {
-                    game->selected_cell = MAXIMUM(game->selected_cell - 1, 0);
-                }
-
-                char8 digit = 0;
-                if (is_button_pressed(KEY_0)) digit = '0';
-                if (is_button_pressed(KEY_1)) digit = '1';
-                if (is_button_pressed(KEY_2)) digit = '2';
-                if (is_button_pressed(KEY_3)) digit = '3';
-                if (is_button_pressed(KEY_4)) digit = '4';
-                if (is_button_pressed(KEY_5)) digit = '5';
-                if (is_button_pressed(KEY_6)) digit = '6';
-                if (is_button_pressed(KEY_7)) digit = '7';
-                if (is_button_pressed(KEY_8)) digit = '8';
-                if (is_button_pressed(KEY_9)) digit = '9';
-
-                if (game->selected_cell < 4)
-                {
-                    if (digit)
-                    {
-                        for (int32 i = 0; i < 3; i += 1)
-                        {
-                            if (!game->ip_digits[game->selected_cell][i])
-                            {
-                                game->ip_digits[game->selected_cell][i] = digit;
-
-                                break;
-                            }
-                        }
-                    }
-
-                    if (is_button_pressed(KEY_BACKSPACE))
-                    {
-                        for (int32 i = 2; i >= 0; i -= 1)
-                        {
-                            if (game->ip_digits[game->selected_cell][i])
-                            {
-                                game->ip_digits[game->selected_cell][i] = 0;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (game->selected_cell == 4)
-                {
-                    if (digit)
-                    {
-                        for (int32 i = 0; i < 5; i += 1)
-                        {
-                            if (!game->port_digits[i])
-                            {
-                                game->port_digits[i] = digit;
-
-                                break;
-                            }
-                        }
-                    }
-                    if (is_button_pressed(KEY_BACKSPACE))
-                    {
-                        for (int32 i = 4; i >= 0; i -= 1)
-                        {
-                            if (game->port_digits[i])
-                            {
-                                game->port_digits[i] = 0;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-
-            for (int32 i = 0; i < 4; i += 1)
-            {
-                uint16 value = 0;
-                uint8 pow = 1;
-                if (game->ip_digits[i][1]) pow = 10;
-                if (game->ip_digits[i][2]) pow = 100;
-                for (int32 j = 0; j < 3; j += 1)
-                {
-                    if (game->ip_digits[i][j])
-                    {
-                        value += (uint16)(game->ip_digits[i][j] - '0') * (pow);
-                        pow /= 10;
-                    }
-                }
-                if (value > 255)
-                {
-                    value = 255;
-                }
-                game->cells[i] = (uint8)value;
-            }
-            uint32 value = 0;
-            uint16 pow = 1;
-            if (game->port_digits[1]) pow = 10;
-            if (game->port_digits[2]) pow = 100;
-            if (game->port_digits[3]) pow = 1000;
-            if (game->port_digits[4]) pow = 10000;
-            for (int32 j = 0; j < 5; j += 1)
-            {
-                if (game->port_digits[j])
-                {
-                    value += (uint32)(game->port_digits[j] - '0') * (pow);
-                    pow /= 10;
-                }
-            }
-            if (value > 65535)
-            {
-                value = 65535;
-            }
-            game->port_cell = (uint16)value;
-
-            if (is_button_pressed(KEY_W) || is_button_pressed(KEY_UP))
-            {
-                game->selected_index = MAXIMUM(game->selected_index - 1, 0);
-            }
-
-            if (is_button_pressed(KEY_S) || is_button_pressed(KEY_DOWN))
-            {
-                game->selected_index = MINIMUM(game->selected_index + 1, 3);
-            }
-
-            if (is_button_pressed(KEY_ENTER) || is_button_pressed(KEY_E) || is_button_pressed(KEY_SPACE))
-            {
-                if (game->selected_index != 1)
-                {
-                    game->screen = GAME_SCREEN_MAIN;
-                    game->offscreen.width = GAME_DEFAULT_HORIZONTAL_RESOLUTION;
-                    game->offscreen.height = GAME_DEFAULT_VERTICAL_RESOLUTION;
-                }
-
-                if (game->selected_index == 0)
-                {
-                    game->mode = GAME_MODE_OFFLINE;
-                }
-                if (game->selected_index == 2)
-                {
-                    game->mode = GAME_MODE_CLIENT;
-
-                    Packet_connect packet_connet = { 0 };
-                    packet_connet.header.type = PACKET_CONNECT;
-                    game->ip = ((uint32)game->cells[0] << 24) | ((uint32)game->cells[1] << 16) | ((uint32)game->cells[2] << 8) | ((uint32)game->cells[3]);
-                    game->port = game->port_cell;
-                    net_send(&packet_connet, sizeof(Packet_connect), game->ip, game->port);
-                }
-                if (game->selected_index == 3)
-                {
-                    game->mode = GAME_MODE_SERVER;
-                    game->port = game->port_cell;
-                    uint16 binded_port = net_bind(game->port);
-                    initialize_game_state(&game->state);
-                }
             }
         }
 
@@ -620,52 +457,18 @@ static void game_loop()
     game->frame_accumulator += delta_time;
     if (game->frame_accumulator >= game->time_per_frame)
     {
-        if (game->mode == GAME_MODE_OFFLINE || game->mode == GAME_MODE_CLIENT)
+        if (game->mode == GAME_MODE_OFFLINE || game->mode == GAME_MODE_CLIENT || game->screen == GAME_SCREEN_MENU)
         {
             int64 frame_start_time = get_time_tick();
+            // TracyCZoneN(ctx, "update_game_state", 1);
             update_game_state(&game->previous_state, game->previous_tick_input,
                               (game->current_time - game->previous_frame_time) / 1'000'000'000.0f, 0);
+            // TracyCZoneEnd(ctx);
+            // TracyCZoneN(ctx2, "render_game_state", 1);
             render_game_state(&game->previous_state);
+            // TracyCZoneEnd(ctx2);
 
             game->frame_time = get_time_tick() - frame_start_time;
-        }
-
-        // TODO:
-        if (game->mode == GAME_MODE_EMPTY)
-        {
-            uint8 red[4] = { 100,100,100, 100 };
-            uint8 green[4] = { 100,100,100, 100 };
-            uint8 blue[4] = { 100,100,100, 100 };
-            red[game->selected_index] = 255;
-            green[game->selected_index] = 255;
-            blue[game->selected_index] = 255;
-
-            clear(0, 0, 0);
-
-            draw_text_string(STRING_LITERAL("Solo"), (float32)game->offscreen.width / 8, (float32)game->offscreen.height / 2 + 16, red[0], green[0], blue[0]);
-            draw_text_string(STRING_LITERAL("Join"), (float32)game->offscreen.width / 8, (float32)game->offscreen.height / 2 - 16, red[2], green[2], blue[2]);
-            draw_text_string(STRING_LITERAL("Host"), (float32)game->offscreen.width / 8, (float32)game->offscreen.height / 2 - 32, red[3], green[3], blue[3]);
-
-            uint8 color[5] = { 100,100,100,100,100 };
-            if (game->selected_index == 1)
-            {
-                color[game->selected_cell] = 255;
-            }
-
-            draw_text_string(uint8_to_string(game->cells[0]), (float32)game->offscreen.width / 8, (float32)game->offscreen.height / 2, color[0], color[0], color[0]);
-            draw_text_string(STRING_LITERAL("."), (float32)game->offscreen.width / 8 + 32 - 8, (float32)game->offscreen.height / 2, 100, 100, 100);
-            draw_text_string(uint8_to_string(game->cells[1]), (float32)game->offscreen.width / 8 + 32, (float32)game->offscreen.height / 2, color[1], color[1], color[1]);
-            draw_text_string(STRING_LITERAL("."), (float32)game->offscreen.width / 8 + 64 - 8, (float32)game->offscreen.height / 2, 100, 100, 100);
-            draw_text_string(uint8_to_string(game->cells[2]), (float32)game->offscreen.width / 8 + 64, (float32)game->offscreen.height / 2, color[2], color[2], color[2]);
-            draw_text_string(STRING_LITERAL("."), (float32)game->offscreen.width / 8 + 96 - 8, (float32)game->offscreen.height / 2, 100, 100, 100);
-            draw_text_string(uint8_to_string(game->cells[3]), (float32)game->offscreen.width / 8 + 96, (float32)game->offscreen.height / 2, color[3], color[3], color[3]);
-            draw_text_string(STRING_LITERAL(":"), (float32)game->offscreen.width / 8 + 128 - 8, (float32)game->offscreen.height / 2, 100, 100, 100);
-            draw_text_string(uint16_to_string(game->port_cell), (float32)game->offscreen.width / 8 + 128, (float32)game->offscreen.height / 2, color[4], color[4], color[4]);
-
-
-            arena_clear(&game->string_arena);
-
-            present_offscreen(game->offscreen);
         }
 
         game->previous_frame_time = game->current_time;

@@ -6,6 +6,7 @@
 
 static bool32 initialize_xaudio2()
 {
+    //xaudio2_callbacks_vtbl = {0};
     xaudio2_callbacks_vtbl.OnStreamEnd = on_stream_end;
     xaudio2_callbacks_vtbl.OnVoiceProcessingPassEnd = on_voice_processing_pass_end;
     xaudio2_callbacks_vtbl.OnVoiceProcessingPassStart = on_voice_processing_pass_start;
