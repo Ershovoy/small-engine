@@ -4,6 +4,9 @@
 #include "math.h"
 #include "input.h"
 #include "renderer.h"
+#ifdef EMBED_ASSETS
+#include "virtual_file_system.h"
+#endif
 #include "platform_api.h"
 #include "arena.h"
 #include "pool.h"

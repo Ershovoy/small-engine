@@ -1,0 +1,28 @@
+[25]
+
+[[settings]]
+
+save_all_file_backed_buffers_on_build: true
+
+[[workspace]]
+./
+
+[[build commands]]
+build_working_dir: ./
+run_working_dir: ./data
+open_panel_on_build: true
+clear_build_output_before_running: true
+error_regex: ^(?P<file>.*)\((?P<line>\d+),?(?P<col>\d+)?\)[ ]?: (?P<type>fatal error|error|warning) (?P<msg>.*)$
+
+[Debug Build And Run]
+key_binding: F5
+build_command: build.bat
+run_command: ./build/main.exe
+
+[Run]
+key_binding: Ctrl-F5
+run_command: ./build/main.exe
+
+[Build Only]
+key_binding: F4
+build_command: build.bat

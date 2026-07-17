@@ -2,7 +2,9 @@
 #include "fixed_point.c"
 #include "math.c"
 #include "input.c"
-
+#ifdef EMBED_ASSETS
+#include "virtual_file_system.c"
+#endif
 #include "platform_api.c"
 #include "arena.c"
 #include "renderer.c"
@@ -20,7 +22,7 @@ static bool32 initialize_game()
     game = arena_allocate(&arena, sizeof(Game));
 
     Image image = { 0 };
-    image.size = GAME_MAX_HORIZONTAL_RESOLUTION * GAME_MAX_VERTICAL_RESOLUTION * 32;
+    image.size = GAME_MAX_HORIZONTAL_RESOLUTION * GAME_MAX_VERTICAL_RESOLUTION * 4;
     image.memory = arena_allocate(&arena, image.size);
     image.width = GAME_MAX_HORIZONTAL_RESOLUTION;
     image.height = GAME_MAX_VERTICAL_RESOLUTION;
@@ -460,13 +462,10 @@ static void game_loop()
         if (game->mode == GAME_MODE_OFFLINE || game->mode == GAME_MODE_CLIENT || game->screen == GAME_SCREEN_MENU)
         {
             int64 frame_start_time = get_time_tick();
-            // TracyCZoneN(ctx, "update_game_state", 1);
+
             update_game_state(&game->previous_state, game->previous_tick_input,
                               (game->current_time - game->previous_frame_time) / 1'000'000'000.0f, 0);
-            // TracyCZoneEnd(ctx);
-            // TracyCZoneN(ctx2, "render_game_state", 1);
             render_game_state(&game->previous_state);
-            // TracyCZoneEnd(ctx2);
 
             game->frame_time = get_time_tick() - frame_start_time;
         }

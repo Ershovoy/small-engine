@@ -1,5 +1,3 @@
-// #include "../../third_party/tracy/tracy/TracyC.h"
-
 #ifdef INTERNAL
 #include "../game.c"
 #endif
@@ -16,6 +14,7 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <winsock2.h>
 #include <mmsystem.h>
+#include <d3d11.h>
 #endif
 
 #ifndef INTERNAL
@@ -29,6 +28,7 @@ int32 _fltused;
 
 #include "main.h"
 #include "xaudio2.c"
+#include "directx.c"
 #include "api.c"
 
 void toggle_fullscreen()
@@ -385,8 +385,6 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
         process_window_messages();
 
         game_loop();
-
-        //TracyCFrameMark;
     }
 
     deinitialize_game();
@@ -436,6 +434,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     device_context = GetDC(window);
     if (!device_context)
+        ExitProcess(1);
+
+    if (initialize_directx(window))
         ExitProcess(1);
 
     timeBeginPeriod(1);
