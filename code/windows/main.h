@@ -7,8 +7,10 @@ static int32 client_height = GAME_DEFAULT_VERTICAL_RESOLUTION * ((640 + GAME_DEF
 
 static bool32 is_running = { 0 };
 
+#ifdef SOFTWARE
 static HDC memory_device_context = { 0 };
 static uint32* device_bitmap_memory = 0;
+#endif
 
 static DWORD window_style = WS_OVERLAPPEDWINDOW | WS_VISIBLE;
 static DWORD window_extended_style = 0;

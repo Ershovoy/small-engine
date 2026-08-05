@@ -31,6 +31,7 @@ SET common_compiler_flags=/TC /nologo /FC /J
 SET compiler_warning_options=/WX /W4 /wd4189 /wd4100 /wd4459 /wd4456 /wd4101
 
 IF %debug_info%==1 (
+    SET compiler_macros=%compiler_macros% /DDEBUG_INFO
     SET debug_flags=/Z7 /Od /MTd
 )
 
@@ -46,13 +47,15 @@ SET compiler_flags=%exclude_c_runtime_compiler_options% %common_compiler_flags% 
 SET linker_flags=%exclude_c_runtime_linker_options% /incremental:no /opt:ref User32.lib Gdi32.lib Ws2_32.lib Ole32.lib XAudio2.lib winmm.lib D3D11.lib DXGI.lib DXGUID.lib
 SET debug_linker_flags=%no_c_runtime_debug_linker_flag% /incremental:no /opt:ref
 
+fxc /T vs_5_0 /E vertex_shader /Fo ..\data\vertex_shader.cso /nologo ..\code\windows\shader.hlsl
+fxc /T ps_5_0 /E pixel_shader /Fo ..\data\pixel_shader.cso /nologo ..\code\windows\shader.hlsl
+
 IF %internal%==1 (
     CL %compiler_macros% %compiler_flags%  ..\code\windows\main.c /link ..\data\icon.res %linker_flags% /OUT:main.exe
 ) ELSE (
     CL %compiler_macros% %compiler_flags% /LD ..\code\windows\game_dll.c /link %debug_linker_flags% /PDB:game_%random%.pdb /OUT:game.dll
     ECHO(
     CL %compiler_macros% %compiler_flags% ..\code\windows\main.c /link %linker_flags% /OUT:main.exe
-    REM
 )
 
 REM Remove rich signature header https://www.ntcore.com/files/richsign.htm /emittoolversioninfo:no /emitpogophaseinfo /emitvolatilemetadata:no

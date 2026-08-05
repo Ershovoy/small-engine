@@ -40,7 +40,7 @@ static bool32 read_file_implementation(char8* file_name, int64 file_name_length,
         {
             // TODO: Read file function can read maximum 2048 megabytes, due to size of its third parameter.
             //       How can we get around it?
-            DWORD readed_file_size;
+            DWORD readed_file_size = 0;
             if (ReadFile(file_handle, buffer, file_size, (DWORD*)&readed_file_size, 0))
             {
                 if (readed_file_size == file_size)
@@ -232,6 +232,10 @@ static int64 net_receive_implementation(void* buffer, int64 size, uint32* out_ip
 
 static void present_offscreen_implementation(void* memory, int32 width, int32 height)
 {
+    game_horizontal_resoultion = width;
+    game_vertical_resolution = height;
+
+#ifdef SOFTWARE
     uint32* source_row = (uint32*)memory;
     uint32* destination_row = (uint32*)device_bitmap_memory;
     for (int32 y = 0; y < height; y += 1)
@@ -255,9 +259,9 @@ static void present_offscreen_implementation(void* memory, int32 width, int32 he
         destination_row += GAME_MAX_HORIZONTAL_RESOLUTION;
     }
 
-    game_horizontal_resoultion = width;
-    game_vertical_resolution = height;
-
     InvalidateRect(window, 0, 0);
     UpdateWindow(window);
+#else
+    directx_draw(memory, width, height);
+#endif
 }

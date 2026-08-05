@@ -6,23 +6,19 @@ typedef struct
     ID3D11DeviceContext* device_context;
     IDXGISwapChain* swap_chain;
     ID3D11RenderTargetView* render_target_view;
+    D3D11_VIEWPORT viewport;
     ID3D11RasterizerState* rasterizer_state;
     ID3D11SamplerState* sampler_state;
     ID3D11VertexShader* vertex_shader;
     ID3D11PixelShader* pixel_shader;
     ID3D11Texture2D* texture;
     ID3D11ShaderResourceView* texture_view;
-
-    uint32 render_target_width;
-    uint32 render_target_height;
-    uint32 texture_width;
-    uint32 texture_height;
 } Directx;
 
 static Directx directx = { 0 };
 
-//static ID3D11Device* device = { 0 };
-//static ID3D11DeviceContext* device_context = { 0 };
+// static ID3D11Device* device = { 0 };
+// static ID3D11DeviceContext* device_context = { 0 };
 // static IDXGISwapChain* swap_chain = { 0 };
 
 // static ID3D11RenderTargetView* render_target_view = { 0 };

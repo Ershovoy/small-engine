@@ -125,8 +125,7 @@ static void render_game_state(Game_state* state)
         draw_pixel_i(255,255,255,(int32)input.mouse.x, (int32)input.mouse.y);
         arena_clear(&game->string_arena);
 
-        render_bitmap(game->cursor, (float32)((int32)input.mouse.x + 22), (float32)((int32)input.mouse.y - 24));
-
+        // render_bitmap(game->cursor, (float32)((int32)input.mouse.x + 22), (float32)((int32)input.mouse.y - 24));
     }
 
     int64 present_time_start = get_time_tick();

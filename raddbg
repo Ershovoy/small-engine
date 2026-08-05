@@ -1,0 +1,18 @@
+// raddbg 0.9.27 project file
+
+target:
+{
+  executable: "build/main.exe"
+  working_directory: data
+  enabled: 1
+}
+watch_pin:
+{
+  expression: "scratch_buffer[26]"
+  source_location: "code/windows/api.c:34:1"
+}
+watch_pin:
+{
+  expression: "scratch_buffer[1]"
+  source_location: "code/windows/api.c:45:1"
+}

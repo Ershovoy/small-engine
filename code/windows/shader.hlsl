@@ -4,8 +4,8 @@ struct Vertex_output
     float2 texture_coordinate : TEXCOORD0;
 };
 
-Texture2D game_image : register(t0);
-SamplerState game_image_sampler : register(s0);
+Texture2D texture1 : register(t0);
+SamplerState sampler1 : register(s0);
 
 Vertex_output vertex_shader(uint vertex_index : SV_VERTEXID)
 {
@@ -33,6 +33,6 @@ Vertex_output vertex_shader(uint vertex_index : SV_VERTEXID)
 
 float4 pixel_shader(Vertex_output input) : SV_TARGET
 {
-    float3 color = game_image.Sample(game_image_sampler, input.texture_coordinate).rgb;
+    float3 color = texture1.Sample(sampler1, input.texture_coordinate).rgb;
     return float4(color, 1.0f);
 }

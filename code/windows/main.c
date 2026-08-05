@@ -28,7 +28,9 @@ int32 _fltused;
 
 #include "main.h"
 #include "xaudio2.c"
+#ifndef SOFTWARE
 #include "directx.c"
+#endif
 #include "api.c"
 
 void toggle_fullscreen()
@@ -138,20 +140,20 @@ LRESULT CALLBACK window_procedure(HWND   window,
 
             break;
         }
-        case WM_SETCURSOR:
-        {
-            if ((mouse_position_x >= present_min_x && mouse_position_y >= present_min_y && mouse_position_x < present_max_x && mouse_position_y < present_max_y) &&
-                (LOWORD(lParam) == HTCLIENT))
-            {
-                SetCursor(0);
-            }
-            else
-            {
-                result = DefWindowProcW(window, message, wParam, lParam);;
-            }
+        // case WM_SETCURSOR:
+        // {
+        //     if ((mouse_position_x >= present_min_x && mouse_position_y >= present_min_y && mouse_position_x < present_max_x && mouse_position_y < present_max_y) &&
+        //         (LOWORD(lParam) == HTCLIENT))
+        //     {
+        //         // SetCursor(0);
+        //     }
+        //     else
+        //     {
+        //         // result = DefWindowProcW(window, message, wParam, lParam);;
+        //     }
 
-            break;
-        }
+        //     break;
+        // }
         case WM_PAINT:
         {
             PAINTSTRUCT paint_struct;
@@ -159,6 +161,7 @@ LRESULT CALLBACK window_procedure(HWND   window,
 
             calculate_presented_region();
 
+#ifdef SOFTWARE
             PatBlt(device_context, 0, 0, present_min_x, client_height, BLACKNESS);
             PatBlt(device_context, present_max_x, 0, client_width - present_max_x, client_height, BLACKNESS);
             PatBlt(device_context, 0, 0, client_width, present_min_y, BLACKNESS);
@@ -166,6 +169,7 @@ LRESULT CALLBACK window_procedure(HWND   window,
 
             StretchBlt(device_context, present_min_x , present_min_y, present_width, present_height,
              		   memory_device_context, 0, game_vertical_resolution - 1, game_horizontal_resoultion, -game_vertical_resolution, SRCCOPY);
+#endif
 
             EndPaint(window, &paint_struct);
 
@@ -195,6 +199,11 @@ LRESULT CALLBACK window_procedure(HWND   window,
             }
 
             if ((key_code == VK_F11) && (is_key_down != was_key_down) && (is_key_down))
+            {
+                toggle_fullscreen();
+            }
+
+            if (key_code == VK_RETURN && (lParam & 0x60000000) == 0x20000000)
             {
                 toggle_fullscreen();
             }
@@ -358,6 +367,7 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
     platform_api.play_sound = xaudio2_play_sound;
     platform_api.present_offscreen = present_offscreen_implementation;
 
+#ifdef SOFTWARE
     memory_device_context = CreateCompatibleDC(device_context);
 
     BITMAPINFOHEADER bitmap_info = { 0 };
@@ -370,6 +380,7 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
 
     HBITMAP device_bitmap = CreateDIBSection(0, (BITMAPINFO*)&bitmap_info, DIB_RGB_COLORS, (void**)&device_bitmap_memory, 0, 0);
     HGDIOBJ previous_object = SelectObject(memory_device_context, device_bitmap);
+#endif
 
 #ifndef INTERNAL
     initialize_debug();
@@ -393,9 +404,11 @@ DWORD WINAPI game_loop_handle(void* lpParameter)
     deinitialize_debug();
 #endif
 
+#ifdef SOFTWARE
     SelectObject(memory_device_context, previous_object);
     DeleteObject(device_bitmap);
     DeleteDC(memory_device_context);
+#endif
 
     ExitThread(0);
 }
@@ -436,8 +449,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (!device_context)
         ExitProcess(1);
 
-    if (initialize_directx(window))
+#ifndef SOFTWARE
+    if (!initialize_directx(window))
         ExitProcess(1);
+#endif
 
     timeBeginPeriod(1);
 
