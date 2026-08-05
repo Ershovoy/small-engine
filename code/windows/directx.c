@@ -64,6 +64,7 @@ static bool32 initialize_directx(HWND window)
 
     result = directx.swap_chain->lpVtbl->GetParent(directx.swap_chain, &IID_IDXGIFactory, &dxgi_factory);
     result = dxgi_factory->lpVtbl->MakeWindowAssociation(dxgi_factory, window, DXGI_MWA_NO_ALT_ENTER);
+    dxgi_factory->lpVtbl->Release(dxgi_factory);
 
     ID3D11Texture2D* back_buffer = 0;
     result = directx.swap_chain->lpVtbl->GetBuffer(directx.swap_chain, 0, &IID_ID3D11Texture2D, &back_buffer);
@@ -209,6 +210,8 @@ static void deinitialize_directx(void)
 {
     directx.pixel_shader->lpVtbl->Release(directx.pixel_shader);
     directx.vertex_shader->lpVtbl->Release(directx.vertex_shader);
+    directx.sampler_state->lpVtbl->Release(directx.sampler_state);
+    directx.texture_view->lpVtbl->Release(directx.texture_view);
     directx.render_target_view->lpVtbl->Release(directx.render_target_view);
     directx.swap_chain->lpVtbl->Release(directx.swap_chain);
     directx.device_context->lpVtbl->Release(directx.device_context);

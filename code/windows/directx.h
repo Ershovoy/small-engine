@@ -7,7 +7,6 @@ typedef struct
     IDXGISwapChain* swap_chain;
     ID3D11RenderTargetView* render_target_view;
     D3D11_VIEWPORT viewport;
-    ID3D11RasterizerState* rasterizer_state;
     ID3D11SamplerState* sampler_state;
     ID3D11VertexShader* vertex_shader;
     ID3D11PixelShader* pixel_shader;

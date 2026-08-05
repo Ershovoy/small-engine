@@ -473,6 +473,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     timeEndPeriod(1);
 
+#ifndef SOTFWARE
+    deinitialize_directx();
+#endif
+
     destroy_xaudio2();
 
     WSACleanup();
