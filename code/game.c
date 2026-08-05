@@ -37,7 +37,7 @@ static bool32 initialize_game()
     game->time_per_update = (int64)1'000'000'000 / 75;
     game->start_time = get_time_tick();
 
-    game->time_per_frame = (int64)1'000'000'000 / 75;
+    game->time_per_frame = (int64)1'000'000'000 / 120;
 
 
     arena_initialize(&game->sound_arena, MEGABYTES(64));
@@ -387,25 +387,25 @@ static int64 calculate_time_scale()
 
 static void game_loop()
 {
-    if (game->mode == GAME_MODE_OFFLINE)
-    {
-        if (is_button_pressed(KEY_F1))
-        {
-            game->mode = GAME_MODE_CLIENT;
+    // if (game->mode == GAME_MODE_OFFLINE)
+    // {
+    //     if (is_button_pressed(KEY_F1))
+    //     {
+    //         game->mode = GAME_MODE_CLIENT;
 
-            Packet_connect packet_connet = { 0 };
-            packet_connet.header.type = PACKET_CONNECT;
+    //         Packet_connect packet_connet = { 0 };
+    //         packet_connet.header.type = PACKET_CONNECT;
 
-            net_send(&packet_connet, sizeof(Packet_connect), SERVER_IP, SERVER_PORT);
+    //         net_send(&packet_connet, sizeof(Packet_connect), SERVER_IP, SERVER_PORT);
 
-        }
-        if (is_button_pressed(KEY_F2))
-        {
-            game->mode = GAME_MODE_SERVER;
-            uint16 binded_port = net_bind(0xFFFF);
-            initialize_game_state(&game->state);
-        }
-    }
+    //     }
+    //     if (is_button_pressed(KEY_F2))
+    //     {
+    //         game->mode = GAME_MODE_SERVER;
+    //         uint16 binded_port = net_bind(0xFFFF);
+    //         initialize_game_state(&game->state);
+    //     }
+    // }
 
     game->current_time = get_time_tick() - game->start_time;
     int64 delta_time = game->current_time - game->previous_time;

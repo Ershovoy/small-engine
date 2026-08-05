@@ -16,7 +16,7 @@
 #include "network.h"
 #include "sound.h"
 
-
+// TODO: Should probably be equal to TICK_INPUT_BATCH_SIZE
 #define MAX_BUFFERED_TICKS (64)
 
 // 0x7f000001 = 127.0.0.1

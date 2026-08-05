@@ -5,8 +5,6 @@
 #ifdef NO_C_EXTENTION
 #include "windows.h"
 #else
-#undef max
-#undef min
 #define VC_EXTRALEAN
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>

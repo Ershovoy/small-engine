@@ -1,5 +1,3 @@
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-#define max(a, b) (((a) < (b)) ? (b) : (a))
 #define square(a) ((a) * (a))
 
 static int64 round_up_to_multiple(int64 value, int64 multiple)

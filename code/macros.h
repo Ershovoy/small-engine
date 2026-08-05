@@ -2,7 +2,7 @@
 #define countof(array) (int64)(sizeof(array) / sizeof(*(array)))
 #define lengthof(string) (countof(string) - 1)
 
-#if DEBUG
+#ifdef DEBUG_INFO
 #define assert(expression) if (!(expression)) { *(int32*)0 = 0; }
 #else
 #define assert(expression) expression
