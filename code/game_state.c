@@ -274,7 +274,7 @@ static void deinitialize_game_state(Game_state* state)
 
 static void update_game_state(Game_state* state, Tick_input input, float32 delta_time, bool32 is_fixed_update)
 {
-    if (game->screen == GAME_SCREEN_MENU)
+    if (game->screen == GAME_SCREEN_MENU && is_fixed_update)
     {
         do_menu();
     }

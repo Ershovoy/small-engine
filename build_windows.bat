@@ -6,7 +6,7 @@ SET debug_info=1
 SET fast_code=0
 SET embed_assets=0
 SET internal=0
-SET software=0
+SET software=1
 
 IF %embed_assets%==1 (
     SET compiler_macros=/DEMBED_ASSETS
