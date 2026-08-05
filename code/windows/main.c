@@ -471,7 +471,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     timeEndPeriod(1);
 
-#ifndef SOTFWARE
+#ifndef SOFTWARE
     deinitialize_directx();
 #endif
 
