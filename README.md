@@ -1,6 +1,6 @@
 # A lightweight, high-performance custom game engine and a Blobby Volley 2 clone, written entirely in C from scratch.
 
-# This project was built to demonstrate low-level systems programming, focusing on absolute control over memory, deterministic physics, and extreme execution speed by deliberately avoiding bloated commercial engines and even the standard C library.
+This project was built to demonstrate low-level systems programming, focusing on absolute control over memory, deterministic physics, and extreme execution speed by deliberately avoiding bloated commercial engines and even the standard C library.
 
 ## 🚀 Key Engineering Features
 
