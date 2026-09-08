@@ -1,0 +1,24 @@
+{
+    "telemetry.telemetryLevel": "off",
+    //"editor.fontFamily": "Cascadia Mono",
+    //"editor.fontFamily": "comic mono font",
+    "editor.guides.indentation": false,
+    "editor.minimap.showSlider": "always",
+    "editor.minimap.size": "fit",
+    "editor.renderWhitespace": "boundary",
+    "editor.mouseWheelScrollSensitivity": 2,
+    "editor.stickyScroll.enabled": false,
+    "workbench.colorTheme": "Gruvbox Dark Hard",
+    "window.commandCenter": false,
+    "files.eol": "\n",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true,
+    "C_Cpp.formatting": "vcFormat",
+    "C_Cpp.vcFormat.indent.caseLabels": true,
+    "files.associations": {
+        "*.h": "c",
+        "*.c": "c",
+        "*.rh": "c"
+    }
+}
